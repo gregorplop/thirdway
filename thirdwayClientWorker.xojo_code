@@ -1,11 +1,27 @@
 #tag Class
-Protected Class LimnieWorker
+Protected Class thirdwayClientWorker
 Inherits Thread
-	#tag Event
-		Sub Run()
+	#tag Method, Flags = &h0
+		Sub Constructor(byref initSource as Readable, byref initDBrecord as DatabaseRecord, initUUID as string)
+		  source = initSource
+		  dbRecord = initDBrecord
+		  UUID = initUUID
 		  
 		End Sub
-	#tag EndEvent
+	#tag EndMethod
+
+
+	#tag Property, Flags = &h0
+		dbRecord As DatabaseRecord
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		source As Readable
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		UUID As String
+	#tag EndProperty
 
 
 	#tag ViewBehavior

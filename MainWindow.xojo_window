@@ -9,7 +9,7 @@ Begin Window MainWindow
    FullScreen      =   False
    FullScreenButton=   False
    HasBackColor    =   False
-   Height          =   620
+   Height          =   694
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
@@ -29,7 +29,7 @@ Begin Window MainWindow
    Begin PagePanel MainPanel
       AutoDeactivate  =   True
       Enabled         =   True
-      Height          =   620
+      Height          =   694
       HelpTag         =   ""
       Index           =   -2147483648
       InitialParent   =   ""
@@ -46,7 +46,7 @@ Begin Window MainWindow
       TabPanelIndex   =   0
       Top             =   0
       Transparent     =   False
-      Value           =   1
+      Value           =   3
       Visible         =   True
       Width           =   435
       Begin PushButton ClientModeBtn
@@ -391,7 +391,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   16.0
          TextUnit        =   0
-         Top             =   524
+         Top             =   598
          Transparent     =   False
          Underline       =   False
          Visible         =   True
@@ -858,6 +858,38 @@ Begin Window MainWindow
             Width           =   124
          End
       End
+      Begin PushButton testPushBtn
+         AutoDeactivate  =   True
+         Bold            =   False
+         ButtonStyle     =   "0"
+         Cancel          =   False
+         Caption         =   "Test push"
+         Default         =   False
+         Enabled         =   True
+         Height          =   58
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   102
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   1
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   102
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   231
+      End
    End
    Begin Listbox log
       AutoDeactivate  =   True
@@ -877,7 +909,7 @@ Begin Window MainWindow
       GridLinesVertical=   0
       HasHeading      =   False
       HeadingIndex    =   -1
-      Height          =   539
+      Height          =   613
       HelpTag         =   ""
       Hierarchical    =   False
       Index           =   -2147483648
@@ -997,7 +1029,7 @@ End
 		  writeLog("...conf table created")
 		  
 		  // this is the document table
-		  db.SQLExecute("CREATE TABLE thirdway.repository(docid UUID PRIMARY KEY , creationstamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now() , userdata TEXT NOT NULL , valid BOOLEAN NOT NULL DEFAULT FALSE) TABLESPACE thirdway")
+		  db.SQLExecute("CREATE TABLE thirdway.repository(docid UUID PRIMARY KEY , creationstamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now() , userdata TEXT NOT NULL , importduration BIGINT , valid BOOLEAN NOT NULL DEFAULT FALSE) TABLESPACE thirdway")
 		  if db.Error then Return db.ErrorMessage
 		  writeLog("...repository table created")
 		  
@@ -1050,6 +1082,13 @@ End
 		  return ""
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub PushConcludedHandler(sender as thirdwayClient, requestData as pgReQ_request)
+		  writeLog("Push concluded: " + if(requestData.Error , requestData.ErrorMessage , "OK"))
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1119,9 +1158,23 @@ End
 		  
 		  select case Mode
 		  case AppMode.Client
-		    MainPanel.Value = 3
-		    writeLog("Client role selected")
-		    Title = "thirdway - client"
+		    
+		    clientSession = new thirdwayClient(db)
+		    if clientSession.LastError = "" then
+		      AddHandler clientSession.PushConcluded , WeakAddressOf PushConcludedHandler
+		      
+		      MainPanel.Value = 3
+		      writeLog("Client role selected")
+		      Title = "thirdway - client"
+		      
+		      writeLog("Client session created")
+		      
+		    else
+		      
+		      writeLog("Client session fail: " + clientSession.LastError)
+		      
+		    end if
+		    
 		  case AppMode.Controller
 		    MainPanel.Value = 2
 		    writeLog("Controller role selected")
@@ -1145,11 +1198,11 @@ End
 
 
 	#tag Property, Flags = &h0
-		db As PostgreSQLDatabase
+		clientSession As thirdwayClient
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		LimnieWorkers(-1) As LimnieWorker
+		db As PostgreSQLDatabase
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -1265,6 +1318,40 @@ End
 	#tag Event
 		Sub Action()
 		  rollbackInit
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events testPushBtn
+	#tag Event
+		Sub Action()
+		  dim sourceFile as FolderItem = GetOpenFolderItem("*.*")
+		  if IsNull(sourceFile) then return
+		  
+		  dim source as BinaryStream = BinaryStream.Open(sourceFile , false)
+		  
+		  dim newRecord as new DatabaseRecord
+		  
+		  dim userdata as Int64 = Microseconds
+		  newRecord.Column("userdata") = str(userdata)
+		  
+		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord)
+		  
+		  writeLog(if(pushOutcome = "" , clientSession.LastError , pushOutcome))
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events log
+	#tag Event
+		Sub DoubleClick()
+		  Dim row, column As Integer
+		  row = Me.RowFromXY(System.MouseX - Me.Left - Self.Left, System.MouseY - Me.Top - Self.Top)
+		  column = Me.ColumnFromXY(System.MouseX - Me.Left - Self.Left, System.MouseY - Me.Top - Self.Top)
+		  
+		  dim c as new Clipboard
+		  c.SetText(me.cell(row,0))
+		  c.Close
+		  
 		End Sub
 	#tag EndEvent
 #tag EndEvents
