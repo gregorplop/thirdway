@@ -131,7 +131,7 @@ Protected Class Session
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function createDocument(source as Readable, poolname as string, metadatum as String, yielding as Boolean, optional PlainPasswd as Variant = nil) As Limnie.Document
+		Function createDocument(source as Readable, poolname as string, metadatum as String, yielding as Boolean, optional PlainPasswd as Variant = nil, optional initUUID as string = "") As Limnie.Document
 		  if IsNull(source) then return new Limnie.Document("New document source is invalid!")
 		  dim poolDetails as Limnie.Pool = getPoolDetails(poolname)
 		  if poolDetails.error then return new Limnie.Document("New document pool could not be opened: " + poolDetails.errorMessage)
@@ -144,7 +144,7 @@ Protected Class Session
 		  dim PickedMedium as integer
 		  dim setActiveMediumOK as Limnie.Medium
 		  dim md5calculator as new MD5Digest
-		  dim uuid as String = generateUUID
+		  dim uuid as String
 		  dim firstObjidx as Int64 = -1
 		  dim newlyCreatedObjidx as int64
 		  dim newPoolCatalogueRecord as DatabaseRecord
@@ -153,6 +153,12 @@ Protected Class Session
 		  dim finalHash as string = "pending"
 		  dim objidxs(-1) as string
 		  dim totalDocumentSize as Int64 = 0
+		  
+		  if isUUID(initUUID) then
+		    uuid = initUUID.Uppercase
+		  else
+		    uuid = generateUUID
+		  end if
 		  
 		  if uuid = empty then Return new Limnie.Document("Error creating document: Could not generate UUID")
 		  

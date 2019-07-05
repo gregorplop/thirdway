@@ -1085,36 +1085,15 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub LogController(sender as thirdwayController, message as string)
+		  writeLog(message)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub PushConcludedHandler(sender as thirdwayClient, requestData as pgReQ_request)
 		  writeLog("Push concluded: " + if(requestData.Error , requestData.ErrorMessage , "OK"))
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub RequestExpired(sender as pgReQ_session, ExpiredRequest as pgReQ_request)
-		  writeLog("Expired request: " + ExpiredRequest.UUID)
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub RequestReceived(sender as pgReQ_session, UUID as string)
-		  // dim newRequest as pgReQ_request = reqSession.getRequestReceived(UUID)
-		  // if newRequest.Error then Return
-		  // 
-		  // dim row(7) as string
-		  // 
-		  // row(0) = newRequest.UUID
-		  // row(1) = newRequest.Type
-		  // row(2) = newRequest.creationStamp.SQLDateTime
-		  // row(3) = if(isnull(newRequest.getParameter("CLEARTEXT")) , "" , newRequest.getParameter("CLEARTEXT").StringValue)
-		  // row(4) = str(newRequest.TimeoutCountdown)
-		  // row(5) = newRequest.ResponseChannel
-		  // row(6) = ""  // we haven't responded yet
-		  // row(7) = ""  // likewise
-		  // 
-		  // RequestList.AddRow row
 		  
 		End Sub
 	#tag EndMethod
@@ -1134,14 +1113,6 @@ End
 		  db.SQLExecute("DROP TABLESPACE thirdway")
 		  writeLog(if(db.Error , "Error dropping tablespace: " + db.ErrorMessage , "Tablespace dropped"))
 		  
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub ServiceInterrupted(sender as pgReQ_session, errorMsg as string)
-		  writeLog("")
-		  writeLog("Service interrupted!")
 		  
 		End Sub
 	#tag EndMethod
@@ -1176,9 +1147,25 @@ End
 		    end if
 		    
 		  case AppMode.Controller
-		    MainPanel.Value = 2
-		    writeLog("Controller role selected")
-		    Title = "thirdway - controller"
+		    
+		    controllerSession = new thirdwayController(db)
+		    
+		    if controllerSession.LastError = "" then
+		      
+		      AddHandler controllerSession.WriteLog , WeakAddressOf LogController
+		      
+		      MainPanel.Value = 2
+		      writeLog("Controller role selected")
+		      Title = "thirdway - controller"
+		      
+		      writeLog("Controller session created")
+		      
+		    else
+		      
+		      writeLog("Controller session fail: " + controllerSession.LastError)
+		      
+		    end if
+		    
 		  case AppMode.Setup
 		    MainPanel.Value = 1
 		    writeLog("Setup/Admin functions")
@@ -1202,15 +1189,15 @@ End
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		controllerSession As thirdwayController
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		db As PostgreSQLDatabase
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		Mode As AppMode
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		reqSession As pgReQ_session
 	#tag EndProperty
 
 

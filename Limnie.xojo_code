@@ -216,6 +216,18 @@ Protected Module Limnie
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function isUUID(candidate as string) As Boolean
+		  if candidate.len <> 36 then return false
+		  if candidate.CountFields("-") <> 5 then return false
+		  
+		  // this is just a very superficial way to validate a uuid
+		  
+		  return true
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function LimnieFileType() As FileType
 		  dim LimnieType as new FileType

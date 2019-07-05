@@ -21,8 +21,7 @@ Protected Class thirdwayClient
 		  end if
 		  
 		  // just an example of declaring requests this session (thirdway client) will have to process
-		  dim pushRequest as new pgReQ_request("SHUTDOWN" , 120 , false) 
-		  RequestDeclarations.Append pushRequest
+		  RequestDeclarations.Append new pgReQ_request("SHUTDOWN" , 120 , false) 
 		  
 		  AddHandler pgSession.ReceivedNotification , WeakAddressOf pgSessionReceiveNotification
 		  
@@ -36,7 +35,7 @@ Protected Class thirdwayClient
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CreateDocument(source as Readable, dbRecord as DatabaseRecord) As string
+		Function CreateDocument(source as Readable, dbRecord as DatabaseRecord, optional remainCached as Boolean = true) As string
 		  // returns temporary document uuid or empty string for error: for error message read LastError
 		  
 		  if busy then
@@ -54,33 +53,15 @@ Protected Class thirdwayClient
 		    Return ""
 		  end if
 		  
-		  dim tempUUID as String = getUUID  // consider this a "temporary" document id for the application to refer to. When pushing into the Limnie finishes, it's going to be replaced with the final document UUID
+		  dim docUUID as String = getUUID  
 		  
-		  pushThread = new thirdwayClientWorker(source , dbRecord , tempUUID)
+		  pushThread = new thirdwayClientWorker(source , dbRecord , docUUID , remainCached)
 		  AddHandler pushThread.Run , WeakAddressOf PushThreadAction
 		  pushThread.Run // start uploading to cache
 		  
-		  Return tempUUID  // inform the app that this is being processed. it should expect an event when done/fail/timeout
+		  Return docUUID  // inform the app that this is being processed. it should expect an event when done/fail/timeout
 		  
 		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function getChannelsListening() As string()
-		  Return ChannelsListening
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function getChannelsListening(idx as Integer) As string
-		  try
-		    Return ChannelsListening(idx)
-		  Catch e as OutOfBoundsException
-		    Return ""
-		  end try
 		  
 		End Function
 	#tag EndMethod
@@ -121,69 +102,6 @@ Protected Class thirdwayClient
 		  
 		  return -1
 		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function getRequestsAwaitingResponse() As pgReQ_request()
-		  // returns clones, not references
-		  dim output(-1) as pgReQ_request
-		  dim lastidx as Integer = RequestsAwaitingResponse.Ubound
-		  
-		  try  // just in case...
-		    
-		    for i as Integer = 0 to lastidx
-		      output.Append RequestsAwaitingResponse(i).Clone
-		    next i
-		    
-		  Catch e as OutOfBoundsException
-		    Return output
-		  end try
-		  
-		  Return output
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function getRequestsReceived() As pgReQ_request()
-		  // returns clones, not references
-		  dim output(-1) as pgReQ_request
-		  dim lastidx as Integer = RequestsReceived.Ubound
-		  
-		  try  // just in case...
-		    
-		    for i as Integer = 0 to lastidx
-		      output.Append RequestsReceived(i).Clone
-		    next i
-		    
-		  Catch e as OutOfBoundsException
-		    Return output
-		  end try
-		  
-		  Return output
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function getResponsesReceived() As pgReQ_request()
-		  // returns clones, not references
-		  dim output(-1) as pgReQ_request
-		  dim lastidx as Integer = ResponsesReceived.Ubound
-		  
-		  try  // just in case...
-		    
-		    for i as Integer = 0 to lastidx
-		      output.Append ResponsesReceived(i).Clone
-		    next i
-		    
-		  Catch e as OutOfBoundsException
-		    Return output
-		  end try
-		  
-		  Return output
 		  
 		End Function
 	#tag EndMethod
@@ -374,7 +292,7 @@ Protected Class thirdwayClient
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub PushThreadAction(sender as Thread)
+		Private Sub PushThreadAction(sender as thirdwayClientWorker)
 		  busy = true
 		  dim bytes2read as Integer = MByte * fragmentSize
 		  dim msecs as Int64 = Microseconds / 1000  // part of measuring how long the push lasts for
@@ -392,10 +310,10 @@ Protected Class thirdwayClient
 		  failResponse.ResponseChannel = "thirdway_" + str(mCurrentPID)
 		  failResponse.responderPID = mCurrentPID  // this is the only way to distinguish a pre-import failure: it will come from the client's PID, not the controller's
 		  failResponse.responseStamp = date(new date)
-		  failResponse.UUID = pushThread.UUID  // the request UUID is the same as the document temp UUID because why the heck not?
+		  failResponse.UUID = pushThread.UUID  // the request UUID is the same as the document UUID because why the heck not?
 		  // ready to send ... we'll see why this is necessary right below
 		  
-		  pushThread.dbRecord.Column("docid") = pushThread.UUID  // the temp UUID for the push
+		  pushThread.dbRecord.Column("docid") = pushThread.UUID  // the doc UUID for the push
 		  pushThread.dbRecord.Int64Column("importduration") = msecs
 		  pushThread.dbRecord.BooleanColumn("valid") = false  // this is the initial form of the document record, things haven't settled yet--most notably: the docid
 		  // we expect the app to have filled the userdata column  --but NOT any of the above. also creationstamp is filled automatically
@@ -405,7 +323,7 @@ Protected Class thirdwayClient
 		    failResponse.ErrorMessage = "Error creating repository document record: " + pgSession.ErrorMessage
 		    RaiseEvent PushConcluded(failResponse)  // this is what the response we've been handcrafting is for: failure before involving the controller
 		    busy = false
-		    return  // we're done with the push, we can't even create the record on the repository table
+		    return  // quit pushing, we can't even create the record on the repository table
 		  end if
 		  
 		  // at this point we can begin uploading the binary data from the stream
@@ -413,14 +331,17 @@ Protected Class thirdwayClient
 		  dim cacheFragment as DatabaseRecord
 		  dim fragmentData as string
 		  dim indx as Integer = 1
+		  dim rollback as Boolean
+		  dim dataPushed as Int64 = 0
+		  dim timeoutPeriod as Integer
 		  
 		  do until pushThread.source.EOF
 		    
 		    fragmentData = pushThread.source.Read(bytes2read)  // get a fragment
 		    
 		    if pushThread.source.ReadError then
-		      // add rollback code here, otherwise it will leave sizeable garbage behind
-		      failResponse.ErrorMessage = "Error reading from data source"
+		      rollback = rollbackPush(pushThread.UUID)
+		      failResponse.ErrorMessage = "Error reading from data source / Rollback " + if(rollback = true , "OK" , "fail")
 		      RaiseEvent PushConcluded(failResponse)
 		      busy = false
 		      return
@@ -428,7 +349,7 @@ Protected Class thirdwayClient
 		    
 		    cacheFragment = new DatabaseRecord
 		    
-		    cacheFragment.Column("fragmentid") = getUUID
+		    cacheFragment.Column("fragmentid") = getUUID   // every fragment has its own unique id
 		    cacheFragment.Column("docid") = pushThread.UUID
 		    cacheFragment.IntegerColumn("indx") = indx
 		    cacheFragment.BooleanColumn("lastfragment") = if(pushThread.source.EOF , true , false)
@@ -438,27 +359,32 @@ Protected Class thirdwayClient
 		    pgSession.InsertRecord("thirdway.cache" , cacheFragment)
 		    
 		    if pgSession.Error then
-		      // add rollback code here, otherwise it will leave sizeable garbage behind
-		      failResponse.ErrorMessage = "Error creating fragment on cache: " + pgSession.ErrorMessage
+		      rollback = rollbackPush(pushThread.UUID)
+		      failResponse.ErrorMessage = "Error creating fragment on cache: " + pgSession.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
 		      RaiseEvent PushConcluded(failResponse)  // this is what the response we've been handcrafting is for: failure before involving the controller
 		      busy = false
 		      return  // we're done with the push
 		    end if
 		    
 		    indx = indx + 1
+		    dataPushed = dataPushed + fragmentData.Len  // in bytes
 		  loop
+		  
+		  dataPushed = Round(dataPushed / 1000000) // now in MB and rounded
+		  timeoutPeriod = if(dataPushed < 50 , 60 , dataPushed * 1.2) // this is purely speculative
 		  
 		  //now we need to ask the controller to import whatever's in the cache into the limnie and finalize the repository record
 		  
-		  dim importRequest as new pgReQ_request("PUSH" , 10 , true) // notice the fixed 60 seconds timeout: this needs a different mechanism
-		  importRequest.UUID = pushThread.UUID  // we provide our own , the temp UUID
+		  dim importRequest as new pgReQ_request("PUSH" , timeoutPeriod , true) // notice the fixed 60 seconds timeout: this needs a different mechanism
+		  importRequest.UUID = pushThread.UUID  // we provide our own , the doc UUID
 		  importRequest.RequestChannel = "thirdway_controller"  // send it there
+		  importRequest.setParameter("remaincached" , pushThread.remainCached)
 		  
 		  importRequest = sendRequest(importRequest)
 		  
 		  if importRequest.Error then
-		    // add rollback code here
-		    failResponse.ErrorMessage = "Error sending request to controller: " + importRequest.ErrorMessage
+		    rollback = rollbackPush(pushThread.UUID)
+		    failResponse.ErrorMessage = "Error sending request to controller: " + importRequest.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
 		    RaiseEvent PushConcluded(failResponse)
 		    busy = False
 		    Return
@@ -475,9 +401,9 @@ Protected Class thirdwayClient
 		  select case ExpiredRequest.Type
 		    
 		  case "PUSH"
-		    // rollback code here
+		    dim rollback as Boolean = rollbackPush(ExpiredRequest.UUID)
 		    ExpiredRequest.Error = true
-		    ExpiredRequest.ErrorMessage = "Request Expired"
+		    ExpiredRequest.ErrorMessage = "Request Expired / Rollback " + if(rollback = true , "OK" , "fail")
 		    RaiseEvent PushConcluded(ExpiredRequest.clone)
 		    
 		  end select
@@ -493,8 +419,31 @@ Protected Class thirdwayClient
 
 	#tag Method, Flags = &h1
 		Protected Sub ResponseReceived(UUID as String)
+		  System.DebugLog("client: response received : " + UUID)
+		  
+		  RaiseEvent PushConcluded(popResponse(UUID))
+		  
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function rollbackPush(UUID as string) As Boolean
+		  dim clearDocError , clearCacheError as Boolean
+		  
+		  pgSession.SQLExecute("DELETE FROM thirdway.repository WHERE docid = '" + UUID + "'")
+		  clearDocError = pgSession.Error
+		  
+		  pgSession.SQLExecute("DELETE FROM thirdway.cache WHERE docid = '" + UUID + "'")
+		  clearCacheError = pgSession.Error
+		  
+		  if clearDocError or clearCacheError then
+		    return false
+		  else
+		    return true
+		  end if
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
