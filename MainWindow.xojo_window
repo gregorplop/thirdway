@@ -44,6 +44,7 @@ Begin Window MainWindow
       Scope           =   0
       TabIndex        =   0
       TabPanelIndex   =   0
+      TabStop         =   True
       Top             =   0
       Transparent     =   False
       Value           =   3
@@ -1094,6 +1095,14 @@ End
 	#tag Method, Flags = &h0
 		Sub PushConcludedHandler(sender as thirdwayClient, requestData as pgReQ_request)
 		  writeLog("Push concluded: " + if(requestData.Error , requestData.ErrorMessage , "OK"))
+		  
+		  if requestData.Error then
+		    writeLog("...queue error: " + requestData.ErrorMessage)
+		  ElseIf IsNull(requestData.getParameter("thirdway_errormsg")) = false then
+		    writeLog("...app error: " + requestData.getParameter("thirdway_errormsg").StringValue)
+		  else
+		    writeLog("...ok")
+		  end if
 		  
 		End Sub
 	#tag EndMethod

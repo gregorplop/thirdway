@@ -301,28 +301,28 @@ Protected Class thirdwayClient
 		  
 		  // prepare a failure response for use if some error occurs before sending the actual request to the controller
 		  dim failResponse as new pgReQ_request("PUSH" , 0 , true)
-		  failResponse.Error = true
+		  failResponse.Error = False  // let's clarify here: this signifies message queue error, not application error. application error in this case should be sought in thirdway_errormsg payload parameter
 		  failResponse.creationStamp = date(new date)
-		  failResponse.ErrorMessage = "uninitialized"  // will depend on the kind of error
+		  failResponse.ErrorMessage = ""  // application error message in thirdway_errormsg
 		  failResponse.initiatorPID = mCurrentPID
-		  failResponse.MyOwnRequest = true
 		  failResponse.processing = false
+		  failResponse.MyOwnRequest = true
 		  failResponse.RequestChannel = "thirdway_controller"  // or whatever the controller is listening to
 		  failResponse.RequireResponse = true
 		  failResponse.ResponseChannel = "thirdway_" + str(mCurrentPID)
 		  failResponse.responderPID = mCurrentPID  // this is the only way to distinguish a pre-import failure: it will come from the client's PID, not the controller's
 		  failResponse.responseStamp = date(new date)
-		  failResponse.UUID = ActivePushjob.UUID  // the request UUID is the same as the document UUID because why the heck not?
+		  failResponse.UUID = ActivePushjob.UUID  // request UUID = document UUID, because why the heck not?
 		  // ready to send ... we'll see why this is necessary right below
 		  
-		  pushThread.dbRecord.Column("docid") = pushThread.UUID  // the doc UUID for the push
-		  pushThread.dbRecord.Int64Column("importduration") = msecs
-		  pushThread.dbRecord.BooleanColumn("valid") = false  // this is the initial form of the document record, things haven't settled yet--most notably: the docid
+		  // build the repository document record
+		  ActivePushjob.dbRecord.Column("docid") = ActivePushjob.UUID  // the doc UUID for the push
+		  ActivePushjob.dbRecord.Int64Column("importduration") = msecs
+		  ActivePushjob.dbRecord.BooleanColumn("valid") = false  // this is the initial form of the document record, things haven't settled yet--most notably: the docid
 		  // we expect the app to have filled the userdata column  --but NOT any of the above. also creationstamp is filled automatically
-		  
-		  pgSession.InsertRecord("thirdway.repository" , pushThread.dbRecord)  
+		  pgSession.InsertRecord("thirdway.repository" , ActivePushjob.dbRecord)  
 		  if pgSession.Error then
-		    failResponse.ErrorMessage = "Error creating repository document record: " + pgSession.ErrorMessage
+		    failResponse.setParameter("thirdway_errormsg" , "Error creating repository document record: " + pgSession.ErrorMessage)
 		    RaiseEvent PushConcluded(failResponse)  // this is what the response we've been handcrafting is for: failure before involving the controller
 		    busy = false
 		    return  // quit pushing, we can't even create the record on the repository table
@@ -337,13 +337,13 @@ Protected Class thirdwayClient
 		  dim dataPushed as Int64 = 0
 		  dim timeoutPeriod as Integer
 		  
-		  do until pushThread.source.EOF
+		  do until ActivePushjob.source.EOF
 		    
-		    fragmentData = pushThread.source.Read(bytes2read)  // get a fragment
+		    fragmentData = ActivePushjob.source.Read(bytes2read)  // get a fragment
 		    
-		    if pushThread.source.ReadError then
-		      rollback = rollbackPush(pushThread.UUID)
-		      failResponse.ErrorMessage = "Error reading from data source / Rollback " + if(rollback = true , "OK" , "fail")
+		    if ActivePushjob.source.ReadError then
+		      rollback = rollbackPush(ActivePushjob.UUID)
+		      failResponse.setParameter("thirdway_errormsg" , "Error reading from data source / Rollback " + if(rollback = true , "OK" , "fail"))
 		      RaiseEvent PushConcluded(failResponse)
 		      busy = false
 		      return
@@ -352,17 +352,17 @@ Protected Class thirdwayClient
 		    cacheFragment = new DatabaseRecord
 		    
 		    cacheFragment.Column("fragmentid") = getUUID   // every fragment has its own unique id
-		    cacheFragment.Column("docid") = pushThread.UUID
+		    cacheFragment.Column("docid") = ActivePushjob.UUID
 		    cacheFragment.IntegerColumn("indx") = indx
-		    cacheFragment.BooleanColumn("lastfragment") = if(pushThread.source.EOF , true , false)
+		    cacheFragment.BooleanColumn("lastfragment") = if(ActivePushjob.source.EOF , true , false)
 		    cacheFragment.Column("action") = "push"
 		    cacheFragment.BlobColumn("content") = fragmentData
 		    
 		    pgSession.InsertRecord("thirdway.cache" , cacheFragment)
 		    
 		    if pgSession.Error then
-		      rollback = rollbackPush(pushThread.UUID)
-		      failResponse.ErrorMessage = "Error creating fragment on cache: " + pgSession.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
+		      rollback = rollbackPush(ActivePushjob.UUID)
+		      failResponse.setParameter("thirdway_errormsg" , "Error creating fragment on cache: " + pgSession.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail"))
 		      RaiseEvent PushConcluded(failResponse)  // this is what the response we've been handcrafting is for: failure before involving the controller
 		      busy = false
 		      return  // we're done with the push
@@ -377,25 +377,27 @@ Protected Class thirdwayClient
 		  
 		  //now we need to ask the controller to import whatever's in the cache into the limnie and finalize the repository record
 		  
-		  dim importRequest as new pgReQ_request("PUSH" , timeoutPeriod , true) // notice the fixed 60 seconds timeout: this needs a different mechanism
-		  importRequest.UUID = pushThread.UUID  // we provide our own , the doc UUID
+		  dim importRequest as new pgReQ_request("PUSH" , timeoutPeriod , true)
+		  importRequest.UUID = ActivePushjob.UUID  // request UUID = document UUID, because why the heck not?
 		  importRequest.RequestChannel = "thirdway_controller"  // send it there
 		  importRequest.ResponseChannel = "thirdway_" + str(mCurrentPID)  // as set in constructor
-		  importRequest.setParameter("remaincached" , pushThread.remainCached)
+		  importRequest.setParameter("remaincached" , ActivePushjob.remainCached)  // this instructs the controller to leave it in cache after importing into the limnie
 		  
 		  importRequest = sendRequest(importRequest)
 		  
 		  if importRequest.Error then
-		    rollback = rollbackPush(pushThread.UUID)
-		    failResponse.ErrorMessage = "Error sending request to controller: " + importRequest.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
-		    RaiseEvent PushConcluded(failResponse)
+		    rollback = rollbackPush(ActivePushjob.UUID)
+		    importRequest.ErrorMessage = importRequest.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
+		    RaiseEvent PushConcluded(importRequest)
 		    busy = False
 		    Return
 		  end if
 		  
-		  
 		  busy = false
-		  // now it's up to the controller to respond and conclude the push: if the controller does not respond then the push will timeout sometime later
+		  
+		  // out of our hands now: 
+		  // it's up to the controller to respond and conclude the push: 
+		  // if the controller does not respond then the push will timeout sometime later
 		End Sub
 	#tag EndMethod
 
@@ -422,8 +424,15 @@ Protected Class thirdwayClient
 
 	#tag Method, Flags = &h1
 		Protected Sub ResponseReceived(UUID as String)
-		  RaiseEvent PushConcluded(popResponse(UUID))
+		  dim thisJustIn as pgReQ_request = popResponse(UUID)
 		  
+		  select case thisJustIn.Type
+		    
+		  case "PUSH"
+		    
+		    RaiseEvent PushConcluded(thisJustIn)
+		    
+		  end select
 		  
 		End Sub
 	#tag EndMethod

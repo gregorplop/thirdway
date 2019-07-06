@@ -1,7 +1,7 @@
 #tag Class
 Protected Class thirdwayController
-	#tag Method, Flags = &h0
-		Function AvailableWorker() As integer
+	#tag Method, Flags = &h21
+		Private Function AvailableWorker() As integer
 		  for i as Integer = 0 to WorkerPool.Ubound
 		    
 		    if WorkerPool(i).isBusy = false then return i
@@ -281,19 +281,17 @@ Protected Class thirdwayController
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function preparePGcredentials(workerID as Integer) As Dictionary
-		  dim output as new Dictionary
+		Private Function prepareNewSession(workerID as Integer) As PostgreSQLDatabase
+		  dim newSession as new PostgreSQLDatabase
 		  
-		  output.Value("host") = pgSession.Host
-		  output.Value("port") = pgSession.Port
-		  output.Value("database") = pgSession.DatabaseName
-		  output.Value("username") = pgSession.UserName
-		  output.Value("password") = pgSession.Password
+		  newSession.Host = pgSession.Host
+		  newSession.Port = pgSession.Port
+		  newSession.DatabaseName = pgSession.DatabaseName
+		  newSession.UserName = pgSession.UserName
+		  newSession.Password = pgSession.Password
+		  newSession.AppName = "thirdwayWorker_" + str(workerID)
 		  
-		  output.Value("workerid") = workerID
-		  
-		  Return output
-		  
+		  Return newSession
 		  
 		End Function
 	#tag EndMethod
@@ -312,6 +310,7 @@ Protected Class thirdwayController
 	#tag Method, Flags = &h1
 		Protected Sub RequestReceived(UUID as String)
 		  dim thisJustIn as pgReQ_request = getRequestReceived(UUID)
+		  dim error as string
 		  
 		  if thisJustIn.Error then Return
 		  
@@ -325,14 +324,17 @@ Protected Class thirdwayController
 		    
 		    if freeWorkerIDX < 0 then
 		      
-		      WorkerPool.Append new thirdwayControllerWorker(preparePGcredentials(WorkerPool.Ubound + 1))
+		      WorkerPool.Append new thirdwayControllerWorker(prepareNewSession(WorkerPool.Ubound + 1))
 		      
-		      if mLastError = "" then  // worker initialized ok
+		      error = WorkerPool(WorkerPool.Ubound).LastError
+		      
+		      if error = "" then  // worker initialized ok
 		        AddHandler WorkerPool(WorkerPool.Ubound).Respond , WeakAddressOf responseSender
 		        WorkerPool(WorkerPool.Ubound).ProcessRequest(thisJustIn)
 		      else  // error starting new worker -- fail the request
 		        
-		        
+		        WorkerPool.Remove(WorkerPool.Ubound)  // remove the failed worker
+		        call sendResponse(thisJustIn.UUID , new Dictionary("thirdway_errormsg" : "Controller could not start a worker: " + error))
 		        
 		      end if
 		      

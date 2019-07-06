@@ -3,13 +3,26 @@ Protected Class thirdwayControllerWorker
 Inherits Thread
 	#tag Event
 		Sub Run()
+		  // process whatever's in the currentRequest
 		  
+		  
+		  RaiseEvent Respond(currentRequest.UUID , new Dictionary("thirdway_errormsg":"worker thread error"))
+		  
+		  
+		  busy = false
 		End Sub
 	#tag EndEvent
 
 
 	#tag Method, Flags = &h0
-		Sub Constructor(dbCredentials as Dictionary)
+		Sub Constructor(newSession as PostgreSQLDatabase)
+		  mLastError = ""
+		  pgsession = newSession
+		  
+		  if pgsession.Connect = false then
+		    mLastError = "init error: " + pgsession.ErrorMessage
+		  end if
+		  
 		  
 		End Sub
 	#tag EndMethod
@@ -29,14 +42,11 @@ Inherits Thread
 
 	#tag Method, Flags = &h0
 		Sub ProcessRequest(incomingRequest as pgReQ_request)
+		  busy = true
+		  currentRequest = incomingRequest
+		  Run  // start processing in the thread
 		  
-		  System.DebugLog("worker - process request: " + incomingRequest.UUID)
 		  
-		  
-		  dim d as new Dictionary
-		  d.Value("test") = "testtest"
-		  
-		  RaiseEvent Respond(incomingRequest.UUID , d)
 		  
 		End Sub
 	#tag EndMethod
@@ -61,10 +71,6 @@ Inherits Thread
 
 	#tag Property, Flags = &h21
 		Private pgsession As PostgreSQLDatabase
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		Untitled As Integer
 	#tag EndProperty
 
 
@@ -107,11 +113,6 @@ Inherits Thread
 			Visible=true
 			Group="Behavior"
 			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Untitled"
-			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 	#tag EndViewBehavior
