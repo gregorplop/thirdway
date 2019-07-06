@@ -30,6 +30,9 @@ Protected Class thirdwayClient
 		  AddHandler queuePollTimer.Action , WeakAddressOf PollTimerAction
 		  queuePollTimer.Mode = timer.ModeMultiple
 		  
+		  pushThread = new Thread
+		  AddHandler pushThread.Run , WeakAddressOf PushThreadAction
+		  
 		  mLastError = ""
 		End Sub
 	#tag EndMethod
@@ -55,8 +58,7 @@ Protected Class thirdwayClient
 		  
 		  dim docUUID as String = getUUID  
 		  
-		  pushThread = new thirdwayClientWorker(source , dbRecord , docUUID , remainCached)
-		  AddHandler pushThread.Run , WeakAddressOf PushThreadAction
+		  ActivePushjob = new PushJob(source , dbRecord , docUUID , remainCached)
 		  pushThread.Run // start uploading to cache
 		  
 		  Return docUUID  // inform the app that this is being processed. it should expect an event when done/fail/timeout
@@ -292,12 +294,12 @@ Protected Class thirdwayClient
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub PushThreadAction(sender as thirdwayClientWorker)
+		Private Sub PushThreadAction(sender as Thread)
 		  busy = true
-		  dim bytes2read as Integer = MByte * fragmentSize
+		  dim bytes2read as Integer = MByte * fragmentSize  // this has to be the same across all clients/controller/limnes
 		  dim msecs as Int64 = Microseconds / 1000  // part of measuring how long the push lasts for
 		  
-		  // prepare a "fake" failure response for use if some error happens before sending the actual request to the controller
+		  // prepare a failure response for use if some error occurs before sending the actual request to the controller
 		  dim failResponse as new pgReQ_request("PUSH" , 0 , true)
 		  failResponse.Error = true
 		  failResponse.creationStamp = date(new date)
@@ -310,7 +312,7 @@ Protected Class thirdwayClient
 		  failResponse.ResponseChannel = "thirdway_" + str(mCurrentPID)
 		  failResponse.responderPID = mCurrentPID  // this is the only way to distinguish a pre-import failure: it will come from the client's PID, not the controller's
 		  failResponse.responseStamp = date(new date)
-		  failResponse.UUID = pushThread.UUID  // the request UUID is the same as the document UUID because why the heck not?
+		  failResponse.UUID = ActivePushjob.UUID  // the request UUID is the same as the document UUID because why the heck not?
 		  // ready to send ... we'll see why this is necessary right below
 		  
 		  pushThread.dbRecord.Column("docid") = pushThread.UUID  // the doc UUID for the push
@@ -378,6 +380,7 @@ Protected Class thirdwayClient
 		  dim importRequest as new pgReQ_request("PUSH" , timeoutPeriod , true) // notice the fixed 60 seconds timeout: this needs a different mechanism
 		  importRequest.UUID = pushThread.UUID  // we provide our own , the doc UUID
 		  importRequest.RequestChannel = "thirdway_controller"  // send it there
+		  importRequest.ResponseChannel = "thirdway_" + str(mCurrentPID)  // as set in constructor
 		  importRequest.setParameter("remaincached" , pushThread.remainCached)
 		  
 		  importRequest = sendRequest(importRequest)
@@ -419,8 +422,6 @@ Protected Class thirdwayClient
 
 	#tag Method, Flags = &h1
 		Protected Sub ResponseReceived(UUID as String)
-		  System.DebugLog("client: response received : " + UUID)
-		  
 		  RaiseEvent PushConcluded(popResponse(UUID))
 		  
 		  
@@ -554,6 +555,10 @@ Protected Class thirdwayClient
 
 
 	#tag Property, Flags = &h21
+		Private ActivePushjob As PushJob
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private busy As Boolean
 	#tag EndProperty
 
@@ -581,7 +586,7 @@ Protected Class thirdwayClient
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private pushThread As thirdwayClientWorker
+		Private pushThread As Thread
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

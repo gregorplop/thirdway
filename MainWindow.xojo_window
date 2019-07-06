@@ -1311,17 +1311,16 @@ End
 #tag Events testPushBtn
 	#tag Event
 		Sub Action()
-		  dim sourceFile as FolderItem = GetOpenFolderItem("*.*")
+		  dim sourceFile as FolderItem = GetOpenFolderItem("*")
 		  if IsNull(sourceFile) then return
 		  
 		  dim source as BinaryStream = BinaryStream.Open(sourceFile , false)
 		  
 		  dim newRecord as new DatabaseRecord
-		  
 		  dim userdata as Int64 = Microseconds
 		  newRecord.Column("userdata") = str(userdata)
 		  
-		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord)
+		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord)  // start a data push
 		  
 		  writeLog(if(pushOutcome = "" , clientSession.LastError , pushOutcome))
 		  

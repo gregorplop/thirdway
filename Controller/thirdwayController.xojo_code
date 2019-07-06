@@ -1,6 +1,18 @@
 #tag Class
 Protected Class thirdwayController
 	#tag Method, Flags = &h0
+		Function AvailableWorker() As integer
+		  for i as Integer = 0 to WorkerPool.Ubound
+		    
+		    if WorkerPool(i).isBusy = false then return i
+		    
+		  next i
+		  
+		  Return -1
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(byref initSession as PostgreSQLDatabase)
 		  if IsNull(initSession) then
 		    mLastError = "No valid postgres session"
@@ -113,22 +125,6 @@ Protected Class thirdwayController
 	#tag Method, Flags = &h0
 		Function LastError() As string
 		  return mLastError
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function pgCredentials_copy() As Dictionary
-		  dim output as new Dictionary
-		  
-		  output.Value("host") = pgSession.Host
-		  output.Value("port") = pgSession.Port
-		  output.Value("database") = pgSession.DatabaseName
-		  output.Value("username") = pgSession.UserName
-		  output.Value("password") = pgSession.Password
-		  
-		  Return output
-		  
 		  
 		End Function
 	#tag EndMethod
@@ -284,6 +280,24 @@ Protected Class thirdwayController
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function preparePGcredentials(workerID as Integer) As Dictionary
+		  dim output as new Dictionary
+		  
+		  output.Value("host") = pgSession.Host
+		  output.Value("port") = pgSession.Port
+		  output.Value("database") = pgSession.DatabaseName
+		  output.Value("username") = pgSession.UserName
+		  output.Value("password") = pgSession.Password
+		  
+		  output.Value("workerid") = workerID
+		  
+		  Return output
+		  
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Sub RequestExpired(ExpiredRequest as pgReQ_request)
 		  select case ExpiredRequest.Type
@@ -305,12 +319,30 @@ Protected Class thirdwayController
 		    
 		  case "PUSH"
 		    
-		    RaiseEvent WriteLog("PUSH received: " + thisJustIn.UUID)
+		    RaiseEvent WriteLog("PUSH rq received: " + thisJustIn.UUID) // in-app logging
 		    
+		    dim freeWorkerIDX as Integer = AvailableWorker
 		    
-		    WorkerPool.Append new thirdwayControllerWorker(new Dictionary)
-		    AddHandler WorkerPool(WorkerPool.Ubound).Respond , WeakAddressOf responseSender
-		    WorkerPool(WorkerPool.Ubound).ProcessRequest(thisJustIn)
+		    if freeWorkerIDX < 0 then
+		      
+		      WorkerPool.Append new thirdwayControllerWorker(preparePGcredentials(WorkerPool.Ubound + 1))
+		      
+		      if mLastError = "" then  // worker initialized ok
+		        AddHandler WorkerPool(WorkerPool.Ubound).Respond , WeakAddressOf responseSender
+		        WorkerPool(WorkerPool.Ubound).ProcessRequest(thisJustIn)
+		      else  // error starting new worker -- fail the request
+		        
+		        
+		        
+		      end if
+		      
+		      
+		    else  // use an existing, free worker
+		      
+		      WorkerPool(freeWorkerIDX).ProcessRequest(thisJustIn)
+		      
+		    end if
+		    
 		    
 		    
 		  end select
@@ -326,11 +358,11 @@ Protected Class thirdwayController
 
 	#tag Method, Flags = &h0
 		Sub responseSender(sender as thirdwayControllerWorker, UUID as string, response as Dictionary)
-		  System.DebugLog("controller respond: " + UUID)
+		  dim sendOutcome as pgReQ_request =  sendResponse(UUID , response)
 		  
-		  
-		  call sendResponse(UUID , response)
-		  
+		  if sendOutcome.Error then
+		    System.DebugLog("Controller failed to respond to " + UUID + " : " + sendOutcome.ErrorMessage)
+		  end if
 		  
 		End Sub
 	#tag EndMethod

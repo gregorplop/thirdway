@@ -15,17 +15,29 @@ Inherits Thread
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function isBusy() As Boolean
+		  return busy
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastError() As String
+		  Return mLastError
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub ProcessRequest(incomingRequest as pgReQ_request)
 		  
 		  System.DebugLog("worker - process request: " + incomingRequest.UUID)
 		  
-		  incomingRequest.Error = true
-		  incomingRequest.ErrorMessage = "test error!"
 		  
 		  dim d as new Dictionary
 		  d.Value("test") = "testtest"
 		  
 		  RaiseEvent Respond(incomingRequest.UUID , d)
+		  
 		End Sub
 	#tag EndMethod
 
@@ -43,8 +55,8 @@ Inherits Thread
 		Private currentRequest As pgReQ_request
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		LastError As String
+	#tag Property, Flags = &h21
+		Private mLastError As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -96,12 +108,6 @@ Inherits Thread
 			Group="Behavior"
 			InitialValue="0"
 			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="LastError"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Untitled"
