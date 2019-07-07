@@ -9,7 +9,7 @@ Begin Window MainWindow
    FullScreen      =   False
    FullScreenButton=   False
    HasBackColor    =   False
-   Height          =   694
+   Height          =   766
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
@@ -29,7 +29,7 @@ Begin Window MainWindow
    Begin PagePanel MainPanel
       AutoDeactivate  =   True
       Enabled         =   True
-      Height          =   694
+      Height          =   766
       HelpTag         =   ""
       Index           =   -2147483648
       InitialParent   =   ""
@@ -44,10 +44,9 @@ Begin Window MainWindow
       Scope           =   0
       TabIndex        =   0
       TabPanelIndex   =   0
-      TabStop         =   True
       Top             =   0
       Transparent     =   False
-      Value           =   0
+      Value           =   1
       Visible         =   True
       Width           =   435
       Begin PushButton ClientModeBtn
@@ -392,7 +391,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   16.0
          TextUnit        =   0
-         Top             =   598
+         Top             =   670
          Transparent     =   False
          Underline       =   False
          Visible         =   True
@@ -859,38 +858,6 @@ Begin Window MainWindow
             Width           =   124
          End
       End
-      Begin PushButton testPushBtn
-         AutoDeactivate  =   True
-         Bold            =   False
-         ButtonStyle     =   "0"
-         Cancel          =   False
-         Caption         =   "Test push"
-         Default         =   False
-         Enabled         =   True
-         Height          =   58
-         HelpTag         =   ""
-         Index           =   -2147483648
-         InitialParent   =   "MainPanel"
-         Italic          =   False
-         Left            =   102
-         LockBottom      =   False
-         LockedInPosition=   False
-         LockLeft        =   True
-         LockRight       =   False
-         LockTop         =   True
-         Scope           =   0
-         TabIndex        =   1
-         TabPanelIndex   =   4
-         TabStop         =   True
-         TextFont        =   "System"
-         TextSize        =   16.0
-         TextUnit        =   0
-         Top             =   102
-         Transparent     =   False
-         Underline       =   False
-         Visible         =   True
-         Width           =   231
-      End
       Begin Label Label8
          AutoDeactivate  =   True
          Bold            =   False
@@ -906,7 +873,7 @@ Begin Window MainWindow
          LockBottom      =   False
          LockedInPosition=   False
          LockLeft        =   True
-         LockRight       =   False
+         LockRight       =   True
          LockTop         =   True
          Multiline       =   True
          Scope           =   2
@@ -925,6 +892,450 @@ Begin Window MainWindow
          Underline       =   False
          Visible         =   True
          Width           =   395
+      End
+      Begin GroupBox PushGroup
+         AutoDeactivate  =   True
+         Bold            =   False
+         Caption         =   "Push data"
+         Enabled         =   True
+         Height          =   130
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   2
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   86
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   395
+         Begin PushButton PushFileBtn
+            AutoDeactivate  =   True
+            Bold            =   False
+            ButtonStyle     =   "0"
+            Cancel          =   False
+            Caption         =   "Push a file"
+            Default         =   False
+            Enabled         =   True
+            Height          =   40
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PushGroup"
+            Italic          =   False
+            Left            =   40
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            TabIndex        =   0
+            TabPanelIndex   =   4
+            TabStop         =   True
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   122
+            Transparent     =   False
+            Underline       =   False
+            Visible         =   True
+            Width           =   160
+         End
+         Begin PushButton PushDir
+            AutoDeactivate  =   True
+            Bold            =   False
+            ButtonStyle     =   "0"
+            Cancel          =   False
+            Caption         =   "Push a directory"
+            Default         =   False
+            Enabled         =   True
+            Height          =   40
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PushGroup"
+            Italic          =   False
+            Left            =   235
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            TabIndex        =   1
+            TabPanelIndex   =   4
+            TabStop         =   True
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   122
+            Transparent     =   False
+            Underline       =   False
+            Visible         =   True
+            Width           =   160
+         End
+         Begin CheckBox RemainCachedCheck
+            AutoDeactivate  =   True
+            Bold            =   False
+            Caption         =   "Remain Cached"
+            DataField       =   ""
+            DataSource      =   ""
+            Enabled         =   True
+            Height          =   20
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PushGroup"
+            Italic          =   False
+            Left            =   40
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            State           =   0
+            TabIndex        =   2
+            TabPanelIndex   =   4
+            TabStop         =   True
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   176
+            Transparent     =   True
+            Underline       =   False
+            Value           =   False
+            Visible         =   True
+            Width           =   160
+         End
+      End
+      Begin GroupBox PullGroup
+         AutoDeactivate  =   True
+         Bold            =   False
+         Caption         =   "Pull Data"
+         Enabled         =   True
+         Height          =   181
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   228
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   395
+         Begin TextField pullUUIDfield
+            AcceptTabs      =   False
+            Alignment       =   2
+            AutoDeactivate  =   True
+            AutomaticallyCheckSpelling=   False
+            BackColor       =   &cFFFFFF00
+            Bold            =   False
+            Border          =   True
+            CueText         =   "UUID"
+            DataField       =   ""
+            DataSource      =   ""
+            Enabled         =   True
+            Format          =   ""
+            Height          =   30
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PullGroup"
+            Italic          =   False
+            Left            =   40
+            LimitText       =   0
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Mask            =   ""
+            Password        =   False
+            ReadOnly        =   False
+            Scope           =   0
+            TabIndex        =   0
+            TabPanelIndex   =   4
+            TabStop         =   True
+            Text            =   ""
+            TextColor       =   &c00000000
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   264
+            Transparent     =   False
+            Underline       =   False
+            UseFocusRing    =   True
+            Visible         =   True
+            Width           =   355
+         End
+         Begin PushButton Pull2DiskBtn
+            AutoDeactivate  =   True
+            Bold            =   False
+            ButtonStyle     =   "0"
+            Cancel          =   False
+            Caption         =   "Retrieve and save to desktop"
+            Default         =   False
+            Enabled         =   True
+            Height          =   40
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PullGroup"
+            Italic          =   False
+            Left            =   40
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            TabIndex        =   1
+            TabPanelIndex   =   4
+            TabStop         =   True
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   306
+            Transparent     =   False
+            Underline       =   False
+            Visible         =   True
+            Width           =   355
+         End
+         Begin CheckBox OpenWhenPulled
+            AutoDeactivate  =   True
+            Bold            =   False
+            Caption         =   "Open afterwards"
+            DataField       =   ""
+            DataSource      =   ""
+            Enabled         =   True
+            Height          =   20
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PullGroup"
+            Italic          =   False
+            Left            =   40
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            State           =   0
+            TabIndex        =   2
+            TabPanelIndex   =   4
+            TabStop         =   True
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   369
+            Transparent     =   True
+            Underline       =   False
+            Value           =   False
+            Visible         =   True
+            Width           =   160
+         End
+      End
+      Begin Listbox RepositoryList
+         AutoDeactivate  =   True
+         AutoHideScrollbars=   True
+         Bold            =   False
+         Border          =   True
+         ColumnCount     =   2
+         ColumnsResizable=   False
+         ColumnWidths    =   ""
+         DataField       =   ""
+         DataSource      =   ""
+         DefaultRowHeight=   -1
+         Enabled         =   True
+         EnableDrag      =   False
+         EnableDragReorder=   False
+         GridLinesHorizontal=   0
+         GridLinesVertical=   0
+         HasHeading      =   True
+         HeadingIndex    =   -1
+         Height          =   283
+         HelpTag         =   ""
+         Hierarchical    =   False
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         InitialValue    =   ""
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   True
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   True
+         LockTop         =   True
+         RequiresSelection=   False
+         Scope           =   0
+         ScrollbarHorizontal=   False
+         ScrollBarVertical=   True
+         SelectionType   =   0
+         ShowDropIndicator=   False
+         TabIndex        =   4
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   421
+         Transparent     =   False
+         Underline       =   False
+         UseFocusRing    =   True
+         Visible         =   True
+         Width           =   395
+         _ScrollOffset   =   0
+         _ScrollWidth    =   -1
+      End
+      Begin TextField WHEREfield
+         AcceptTabs      =   False
+         Alignment       =   2
+         AutoDeactivate  =   True
+         AutomaticallyCheckSpelling=   False
+         BackColor       =   &cFFFFFF00
+         Bold            =   False
+         Border          =   True
+         CueText         =   "WHERE"
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Format          =   ""
+         Height          =   30
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LimitText       =   0
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Mask            =   ""
+         Password        =   False
+         ReadOnly        =   False
+         Scope           =   0
+         TabIndex        =   5
+         TabPanelIndex   =   4
+         TabStop         =   True
+         Text            =   ""
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   716
+         Transparent     =   False
+         Underline       =   False
+         UseFocusRing    =   True
+         Visible         =   True
+         Width           =   232
+      End
+      Begin PushButton WHEREbtn
+         AutoDeactivate  =   True
+         Bold            =   False
+         ButtonStyle     =   "0"
+         Cancel          =   False
+         Caption         =   "Query Repository"
+         Default         =   False
+         Enabled         =   True
+         Height          =   30
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   264
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   6
+         TabPanelIndex   =   4
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   716
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   151
+      End
+      Begin Listbox CacheList
+         AutoDeactivate  =   True
+         AutoHideScrollbars=   True
+         Bold            =   False
+         Border          =   True
+         ColumnCount     =   1
+         ColumnsResizable=   False
+         ColumnWidths    =   ""
+         DataField       =   ""
+         DataSource      =   ""
+         DefaultRowHeight=   -1
+         Enabled         =   True
+         EnableDrag      =   False
+         EnableDragReorder=   False
+         GridLinesHorizontal=   0
+         GridLinesVertical=   0
+         HasHeading      =   False
+         HeadingIndex    =   -1
+         Height          =   571
+         HelpTag         =   ""
+         Hierarchical    =   False
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         InitialValue    =   ""
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   True
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   True
+         LockTop         =   True
+         RequiresSelection=   False
+         Scope           =   0
+         ScrollbarHorizontal=   False
+         ScrollBarVertical=   True
+         SelectionType   =   0
+         ShowDropIndicator=   False
+         TabIndex        =   2
+         TabPanelIndex   =   3
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   175
+         Transparent     =   False
+         Underline       =   False
+         UseFocusRing    =   True
+         Visible         =   True
+         Width           =   395
+         _ScrollOffset   =   0
+         _ScrollWidth    =   -1
       End
    End
    Begin Listbox log
@@ -945,7 +1356,7 @@ Begin Window MainWindow
       GridLinesVertical=   0
       HasHeading      =   False
       HeadingIndex    =   -1
-      Height          =   613
+      Height          =   685
       HelpTag         =   ""
       Hierarchical    =   False
       Index           =   -2147483648
@@ -1352,7 +1763,26 @@ End
 		End Sub
 	#tag EndEvent
 #tag EndEvents
-#tag Events testPushBtn
+#tag Events PushFileBtn
+	#tag Event
+		Sub Action()
+		  dim sourceFile as FolderItem = GetOpenFolderItem("*")
+		  if IsNull(sourceFile) then return
+		  
+		  dim source as BinaryStream = BinaryStream.Open(sourceFile , false)
+		  
+		  dim newRecord as new DatabaseRecord
+		  dim userdata as Int64 = Microseconds
+		  newRecord.Column("userdata") = str(userdata)
+		  
+		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord)  // start a data push
+		  
+		  writeLog(if(pushOutcome = "" , clientSession.LastError , pushOutcome))
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events PushDir
 	#tag Event
 		Sub Action()
 		  dim sourceFile as FolderItem = GetOpenFolderItem("*")
