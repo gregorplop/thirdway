@@ -47,7 +47,7 @@ Begin Window MainWindow
       TabStop         =   True
       Top             =   0
       Transparent     =   False
-      Value           =   3
+      Value           =   0
       Visible         =   True
       Width           =   435
       Begin PushButton ClientModeBtn
@@ -891,6 +891,41 @@ Begin Window MainWindow
          Visible         =   True
          Width           =   231
       End
+      Begin Label Label8
+         AutoDeactivate  =   True
+         Bold            =   False
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   77
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Multiline       =   True
+         Scope           =   2
+         Selectable      =   False
+         TabIndex        =   1
+         TabPanelIndex   =   3
+         TabStop         =   True
+         Text            =   "On a production system, this functionality ought to be part of a service application"
+         TextAlign       =   1
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   21.0
+         TextUnit        =   0
+         Top             =   86
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   395
+      End
    End
    Begin Listbox log
       AutoDeactivate  =   True
@@ -1034,7 +1069,7 @@ End
 		  if db.Error then Return db.ErrorMessage
 		  writeLog("...repository table created")
 		  
-		  db.SQLExecute("CREATE TYPE thirdway.cache_action AS ENUM ('push' , 'pull' , 'invalid')")
+		  db.SQLExecute("CREATE TYPE thirdway.cache_action AS ENUM ('push' , 'pull' , 'invalid' , 'retain')")
 		  if db.Error then Return db.ErrorMessage
 		  writeLog("...cached object states enumeration created")
 		  

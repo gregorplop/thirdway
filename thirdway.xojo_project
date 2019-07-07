@@ -11,7 +11,6 @@ Class=App;App.xojo_code;&h00000000579E07FF;&h0000000000000000;false
 Window=MainWindow;MainWindow.xojo_window;&h000000004AAC2FFF;&h0000000000000000;false
 Module=Limnie;Limnie.xojo_code;&h0000000039CA17FF;&h0000000000000000;false
 Class=pgReQ_request;pgReQ_request.xojo_code;&h0000000003050FFF;&h0000000000000000;false
-Class=thirdwayReadStream;thirdwayReadStream.xojo_code;&h0000000041FAEFFF;&h0000000000000000;false
 BuildSteps=Build Automation;Build Automation.xojo_code;&h000000005BB23FFF;&h0000000000000000;false
 Folder=Client;Client;&h00000000775847FF;&h0000000000000000;false
 Class=PushJob;PushJob.xojo_code;&h0000000001F797FF;&h0000000000000000;false
