@@ -1,7 +1,7 @@
 #tag Class
 Protected Class thirdwayControllerWorker
 Inherits Thread
-Implements Readable
+Implements Readable, Writeable
 	#tag Event
 		Sub Run()
 		  // process whatever's in the currentRequest
@@ -124,8 +124,8 @@ Implements Readable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function EOF() As Boolean
+	#tag Method, Flags = &h1
+		Protected Function EOF() As Boolean
 		  // Part of the Readable interface.
 		  
 		  if readable_NextFragment > readable_LastFragment then
@@ -136,6 +136,14 @@ Implements Readable
 		  
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub Flush()
+		  // Part of the Writeable interface.
+		  
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -201,8 +209,8 @@ Implements Readable
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
+	#tag Method, Flags = &h1
+		Protected Function Read(Count As Integer, encoding As TextEncoding = Nil) As String
 		  // Part of the Readable interface.
 		  
 		  // we ignore count and encoding
@@ -231,8 +239,8 @@ Implements Readable
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function ReadError() As Boolean
+	#tag Method, Flags = &h1
+		Protected Function ReadError() As Boolean
 		  // Part of the Readable interface.
 		  
 		  if readable_ReadErrorMessage = "" then
@@ -259,6 +267,22 @@ Implements Readable
 		  else
 		    return true
 		  end if
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub Write(text As String)
+		  // Part of the Writeable interface.
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function WriteError() As Boolean
+		  // Part of the Writeable interface.
+		  
 		  
 		End Function
 	#tag EndMethod

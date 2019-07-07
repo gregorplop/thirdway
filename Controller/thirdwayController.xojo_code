@@ -1,5 +1,33 @@
 #tag Class
 Protected Class thirdwayController
+	#tag Method, Flags = &h0
+		Function AddWorker() As Integer
+		  // output is new worker index or -1 for failure. error message in LastError
+		  
+		  dim newSession as new PostgreSQLDatabase
+		  
+		  newSession.Host = pgSession.Host
+		  newSession.Port = pgSession.Port
+		  newSession.DatabaseName = pgSession.DatabaseName
+		  newSession.UserName = pgSession.UserName
+		  newSession.Password = pgSession.Password
+		  newSession.AppName = "thirdwayWorker_" + str(WorkerPool.Ubound + 1)
+		  
+		  WorkerPool.Append new thirdwayControllerWorker(newSession)
+		  
+		  dim NewWorkerIDX as Integer = WorkerPool.Ubound
+		  
+		  if WorkerPool(NewWorkerIDX).LastError = "" then  // worker initialized ok
+		    AddHandler WorkerPool(NewWorkerIDX).Respond , WeakAddressOf responseSender  // use the thirdwayController pgSession for sending responses
+		  else  // error initializing new worker, remove it from pool
+		    WorkerPool.Remove(NewWorkerIDX)
+		    NewWorkerIDX = -1
+		  end if
+		  
+		  Return NewWorkerIDX
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function AvailableWorker() As integer
 		  for i as Integer = 0 to WorkerPool.Ubound
@@ -43,6 +71,9 @@ Protected Class thirdwayController
 		  // just an example of declaring requests this session (thirdway controller) will have to process
 		  RequestDeclarations.Append new pgReQ_request("ACKNOWLEDGE" , 120 , true)
 		  RequestDeclarations.Append new pgReQ_request("PUSH" , 120 , true) 
+		  RequestDeclarations.Append new pgReQ_request("PULL" , 120 , true) 
+		  
+		  
 		  
 		  AddHandler pgSession.ReceivedNotification , WeakAddressOf pgSessionReceiveNotification
 		  
@@ -280,22 +311,6 @@ Protected Class thirdwayController
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function prepareNewSession(workerID as Integer) As PostgreSQLDatabase
-		  dim newSession as new PostgreSQLDatabase
-		  
-		  newSession.Host = pgSession.Host
-		  newSession.Port = pgSession.Port
-		  newSession.DatabaseName = pgSession.DatabaseName
-		  newSession.UserName = pgSession.UserName
-		  newSession.Password = pgSession.Password
-		  newSession.AppName = "thirdwayWorker_" + str(workerID)
-		  
-		  Return newSession
-		  
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1
 		Protected Sub RequestExpired(ExpiredRequest as pgReQ_request)
 		  select case ExpiredRequest.Type
@@ -310,7 +325,6 @@ Protected Class thirdwayController
 	#tag Method, Flags = &h1
 		Protected Sub RequestReceived(UUID as String)
 		  dim thisJustIn as pgReQ_request = getRequestReceived(UUID)
-		  dim error as string
 		  
 		  if thisJustIn.Error then Return
 		  
@@ -322,30 +336,19 @@ Protected Class thirdwayController
 		    
 		    dim freeWorkerIDX as Integer = AvailableWorker
 		    
-		    if freeWorkerIDX < 0 then
+		    if freeWorkerIDX < 0 then // no free worker
 		      
-		      WorkerPool.Append new thirdwayControllerWorker(prepareNewSession(WorkerPool.Ubound + 1))
+		      dim newWorkerIDX as Integer = AddWorker
 		      
-		      error = WorkerPool(WorkerPool.Ubound).LastError
-		      
-		      if error = "" then  // worker initialized ok
-		        AddHandler WorkerPool(WorkerPool.Ubound).Respond , WeakAddressOf responseSender
-		        WorkerPool(WorkerPool.Ubound).ProcessRequest(thisJustIn)
-		      else  // error starting new worker -- fail the request
-		        
-		        WorkerPool.Remove(WorkerPool.Ubound)  // remove the failed worker
-		        call sendResponse(thisJustIn.UUID , new Dictionary("thirdway_errormsg" : "Controller could not start a worker: " + error))
-		        
+		      if newWorkerIDX >= 0 then // new worker created ok, put it to work
+		        WorkerPool(newWorkerIDX).ProcessRequest(thisJustIn)
+		      else  // error starting new worker -- fail the request AND don't care about the response being successfully sent
+		        call sendResponse(thisJustIn.UUID , new Dictionary("thirdway_errormsg" : "Controller could not start worker"))
 		      end if
 		      
-		      
 		    else  // use an existing, free worker
-		      
 		      WorkerPool(freeWorkerIDX).ProcessRequest(thisJustIn)
-		      
 		    end if
-		    
-		    
 		    
 		  end select
 		  
@@ -497,7 +500,6 @@ Protected Class thirdwayController
 		  dim LimnieFile as FolderItem = GetFolderItem(limnie_path)
 		  
 		  if IsNull(LimnieFile) then return "Limnie file is invalid"
-		  
 		  
 		  dim LimnieVFS as new Limnie.VFS
 		  LimnieVFS.file = LimnieFile
