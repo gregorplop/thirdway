@@ -1,7 +1,7 @@
 #tag Class
 Protected Class thirdwayControllerWorker
 Inherits Thread
-Implements Readable, Writeable
+Implements Readable,Writeable
 	#tag Event
 		Sub Run()
 		  // process whatever's in the currentRequest
@@ -17,6 +17,7 @@ Implements Readable, Writeable
 		    
 		    dim remainCached as Boolean = currentRequest.getParameter("remaincached").BooleanValue
 		    
+		    // remember: this class implements the Readable interface so as to do these imports
 		    dim newDocument as Limnie.Document = LimnieSession.createDocument(me , "defaultpool" , "thirdway object" , true , nil , currentRequest.UUID)
 		    
 		    if newDocument.error then
@@ -55,6 +56,10 @@ Implements Readable, Writeable
 		      return
 		    end if
 		    
+		    if currentRequest.getParameter("remaincached").BooleanValue = false then
+		      call clearCache(currentRequest.UUID)  // don't bother with the outcome of this
+		    end if
+		    
 		    RaiseEvent Respond(currentRequest.UUID , new dictionary("complete" : true))
 		    
 		    
@@ -68,6 +73,14 @@ Implements Readable, Writeable
 		End Sub
 	#tag EndEvent
 
+
+	#tag Method, Flags = &h21
+		Private Function clearCache(UUID as string) As Boolean
+		  pgSession.SQLExecute("DELETE FROM thirdway.cache WHERE docid = '" + UUID + "'")
+		  Return not pgsession.Error
+		  
+		End Function
+	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(newSession as PostgreSQLDatabase)

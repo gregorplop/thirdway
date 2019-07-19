@@ -25,7 +25,7 @@ Begin Window MainWindow
    Resizeable      =   True
    Title           =   "thirdway playground"
    Visible         =   True
-   Width           =   910
+   Width           =   980
    Begin PagePanel MainPanel
       AutoDeactivate  =   True
       Enabled         =   True
@@ -46,7 +46,7 @@ Begin Window MainWindow
       TabPanelIndex   =   0
       Top             =   0
       Transparent     =   False
-      Value           =   1
+      Value           =   3
       Visible         =   True
       Width           =   435
       Begin PushButton ClientModeBtn
@@ -960,7 +960,7 @@ Begin Window MainWindow
             Cancel          =   False
             Caption         =   "Push a directory"
             Default         =   False
-            Enabled         =   True
+            Enabled         =   False
             Height          =   40
             HelpTag         =   ""
             Index           =   -2147483648
@@ -1290,7 +1290,7 @@ Begin Window MainWindow
          AutoHideScrollbars=   True
          Bold            =   False
          Border          =   True
-         ColumnCount     =   1
+         ColumnCount     =   2
          ColumnsResizable=   False
          ColumnWidths    =   ""
          DataField       =   ""
@@ -1301,7 +1301,7 @@ Begin Window MainWindow
          EnableDragReorder=   False
          GridLinesHorizontal=   0
          GridLinesVertical=   0
-         HasHeading      =   False
+         HasHeading      =   True
          HeadingIndex    =   -1
          Height          =   571
          HelpTag         =   ""
@@ -1386,7 +1386,7 @@ Begin Window MainWindow
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   443
+      Width           =   513
       _ScrollOffset   =   0
       _ScrollWidth    =   -1
    End
@@ -1424,6 +1424,14 @@ Begin Window MainWindow
       Underline       =   False
       Visible         =   True
       Width           =   164
+   End
+   Begin Timer CacheListRefreshTimer
+      Index           =   -2147483648
+      LockedInPosition=   False
+      Mode            =   0
+      Period          =   1000
+      Scope           =   0
+      TabPanelIndex   =   0
    End
 End
 #tag EndWindow
@@ -1615,6 +1623,8 @@ End
 		      
 		      writeLog("Controller session created")
 		      
+		      CacheListRefreshTimer.Mode = timer.ModeMultiple
+		      
 		    else
 		      
 		      writeLog("Controller session fail: " + controllerSession.LastError)
@@ -1775,7 +1785,7 @@ End
 		  dim userdata as Int64 = Microseconds
 		  newRecord.Column("userdata") = str(userdata)
 		  
-		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord)  // start a data push
+		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord , RemainCachedCheck.Value)  // start a data push
 		  
 		  writeLog(if(pushOutcome = "" , clientSession.LastError , pushOutcome))
 		  
@@ -1801,6 +1811,21 @@ End
 		End Sub
 	#tag EndEvent
 #tag EndEvents
+#tag Events CacheList
+	#tag Event
+		Sub Open()
+		  me.ColumnCount = 2
+		  me.Heading(0) = "Document UUID"
+		  me.Heading(1) = "Fragment"
+		  
+		  me.HasHeading = true
+		  me.ColumnWidths = "80%,20%"
+		  
+		  me.HeaderType(-1) = Listbox.HeaderTypes.NotSortable
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
 #tag Events log
 	#tag Event
 		Sub DoubleClick()
@@ -1812,6 +1837,30 @@ End
 		  c.SetText(me.cell(row,0))
 		  c.Close
 		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events CacheListRefreshTimer
+	#tag Event
+		Sub Action()
+		  dim cursorPos as Integer = -1
+		  if CacheList.ListIndex >= 0 then cursorPos = CacheList.ListIndex
+		  
+		  CacheList.DeleteAllRows
+		  
+		  dim cacheData as RecordSet = db.SQLSelect("SELECT docid , indx FROM thirdway.cache ORDER BY creationstamp ASC")
+		  if db.Error then
+		    writeLog("Error refreshing cache:")
+		    writeLog("..." + db.ErrorMessage)
+		  end if
+		  
+		  
+		  while not cacheData.EOF
+		    CacheList.AddRow cacheData.Field("docid").StringValue , cacheData.Field("indx").StringValue
+		    cacheData.MoveNext
+		  wend
+		  
+		  if cursorPos >= 0 and cursorPos <= CacheList.ListCount - 1 then CacheList.ListIndex = cursorPos
 		End Sub
 	#tag EndEvent
 #tag EndEvents
