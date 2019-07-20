@@ -41,6 +41,21 @@ Protected Class thirdwayController
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function clearCache(optional UUID as string = "ALL") As Boolean
+		  if UUID = "ALL" then
+		    pgSession.SQLExecute("DELETE FROM thirdway.cache")
+		  elseif isUUID(UUID) then
+		    pgSession.SQLExecute("DELETE FROM thirdway.cache WHERE docid = '" + UUID + "'")
+		  else
+		    Return false
+		  end if
+		  
+		  Return not pgsession.Error
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(byref initSession as PostgreSQLDatabase)
 		  if IsNull(initSession) then
 		    mLastError = "No valid postgres session"

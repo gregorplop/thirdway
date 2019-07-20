@@ -536,6 +536,28 @@ Begin Window MainWindow
          Underline       =   False
          Visible         =   True
          Width           =   395
+         Begin ProgressWheel busyIndicator
+            AutoDeactivate  =   True
+            Enabled         =   True
+            Height          =   16
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "Label4"
+            Left            =   141
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            TabIndex        =   0
+            TabPanelIndex   =   4
+            TabStop         =   True
+            Top             =   43
+            Transparent     =   True
+            Visible         =   False
+            Width           =   16
+         End
       End
       Begin Label Label5
          AutoDeactivate  =   True
@@ -898,7 +920,7 @@ Begin Window MainWindow
          Bold            =   False
          Caption         =   "Push data"
          Enabled         =   True
-         Height          =   130
+         Height          =   97
          HelpTag         =   ""
          Index           =   -2147483648
          InitialParent   =   "MainPanel"
@@ -953,38 +975,6 @@ Begin Window MainWindow
             Visible         =   True
             Width           =   160
          End
-         Begin PushButton PushDir
-            AutoDeactivate  =   True
-            Bold            =   False
-            ButtonStyle     =   "0"
-            Cancel          =   False
-            Caption         =   "Push a directory"
-            Default         =   False
-            Enabled         =   False
-            Height          =   40
-            HelpTag         =   ""
-            Index           =   -2147483648
-            InitialParent   =   "PushGroup"
-            Italic          =   False
-            Left            =   235
-            LockBottom      =   False
-            LockedInPosition=   False
-            LockLeft        =   True
-            LockRight       =   False
-            LockTop         =   True
-            Scope           =   0
-            TabIndex        =   1
-            TabPanelIndex   =   4
-            TabStop         =   True
-            TextFont        =   "System"
-            TextSize        =   16.0
-            TextUnit        =   0
-            Top             =   122
-            Transparent     =   False
-            Underline       =   False
-            Visible         =   True
-            Width           =   160
-         End
          Begin CheckBox RemainCachedCheck
             AutoDeactivate  =   True
             Bold            =   False
@@ -997,7 +987,7 @@ Begin Window MainWindow
             Index           =   -2147483648
             InitialParent   =   "PushGroup"
             Italic          =   False
-            Left            =   40
+            Left            =   235
             LockBottom      =   False
             LockedInPosition=   False
             LockLeft        =   True
@@ -1011,7 +1001,7 @@ Begin Window MainWindow
             TextFont        =   "System"
             TextSize        =   16.0
             TextUnit        =   0
-            Top             =   176
+            Top             =   132
             Transparent     =   True
             Underline       =   False
             Value           =   False
@@ -1024,7 +1014,7 @@ Begin Window MainWindow
          Bold            =   False
          Caption         =   "Pull Data"
          Enabled         =   True
-         Height          =   181
+         Height          =   139
          HelpTag         =   ""
          Index           =   -2147483648
          InitialParent   =   "MainPanel"
@@ -1042,7 +1032,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   16.0
          TextUnit        =   0
-         Top             =   228
+         Top             =   195
          Transparent     =   False
          Underline       =   False
          Visible         =   True
@@ -1084,7 +1074,7 @@ Begin Window MainWindow
             TextFont        =   "System"
             TextSize        =   16.0
             TextUnit        =   0
-            Top             =   264
+            Top             =   231
             Transparent     =   False
             Underline       =   False
             UseFocusRing    =   True
@@ -1096,7 +1086,7 @@ Begin Window MainWindow
             Bold            =   False
             ButtonStyle     =   "0"
             Cancel          =   False
-            Caption         =   "Retrieve and save to desktop"
+            Caption         =   "Retrieve && Save"
             Default         =   False
             Enabled         =   True
             Height          =   40
@@ -1117,11 +1107,11 @@ Begin Window MainWindow
             TextFont        =   "System"
             TextSize        =   16.0
             TextUnit        =   0
-            Top             =   306
+            Top             =   273
             Transparent     =   False
             Underline       =   False
             Visible         =   True
-            Width           =   355
+            Width           =   160
          End
          Begin CheckBox OpenWhenPulled
             AutoDeactivate  =   True
@@ -1135,7 +1125,7 @@ Begin Window MainWindow
             Index           =   -2147483648
             InitialParent   =   "PullGroup"
             Italic          =   False
-            Left            =   40
+            Left            =   235
             LockBottom      =   False
             LockedInPosition=   False
             LockLeft        =   True
@@ -1149,7 +1139,7 @@ Begin Window MainWindow
             TextFont        =   "System"
             TextSize        =   16.0
             TextUnit        =   0
-            Top             =   369
+            Top             =   283
             Transparent     =   True
             Underline       =   False
             Value           =   False
@@ -1175,8 +1165,8 @@ Begin Window MainWindow
          GridLinesVertical=   0
          HasHeading      =   True
          HeadingIndex    =   -1
-         Height          =   283
-         HelpTag         =   ""
+         Height          =   348
+         HelpTag         =   "double click to auto-fill pull data UUID"
          Hierarchical    =   False
          Index           =   -2147483648
          InitialParent   =   "MainPanel"
@@ -1198,9 +1188,9 @@ Begin Window MainWindow
          TabPanelIndex   =   4
          TabStop         =   True
          TextFont        =   "System"
-         TextSize        =   16.0
+         TextSize        =   14.0
          TextUnit        =   0
-         Top             =   421
+         Top             =   356
          Transparent     =   False
          Underline       =   False
          UseFocusRing    =   True
@@ -1303,7 +1293,7 @@ Begin Window MainWindow
          GridLinesVertical=   0
          HasHeading      =   True
          HeadingIndex    =   -1
-         Height          =   571
+         Height          =   523
          HelpTag         =   ""
          Hierarchical    =   False
          Index           =   -2147483648
@@ -1325,8 +1315,8 @@ Begin Window MainWindow
          TabIndex        =   2
          TabPanelIndex   =   3
          TabStop         =   True
-         TextFont        =   "System"
-         TextSize        =   16.0
+         TextFont        =   "Consolas"
+         TextSize        =   14.0
          TextUnit        =   0
          Top             =   175
          Transparent     =   False
@@ -1336,6 +1326,38 @@ Begin Window MainWindow
          Width           =   395
          _ScrollOffset   =   0
          _ScrollWidth    =   -1
+      End
+      Begin PushButton ClearCacheBtn
+         AutoDeactivate  =   True
+         Bold            =   False
+         ButtonStyle     =   "0"
+         Cancel          =   False
+         Caption         =   "Clear Cache"
+         Default         =   False
+         Enabled         =   True
+         Height          =   36
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   313
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Scope           =   0
+         TabIndex        =   3
+         TabPanelIndex   =   3
+         TabStop         =   True
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   710
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   102
       End
    End
    Begin Listbox log
@@ -1558,7 +1580,36 @@ End
 		    writeLog("...ok")
 		  end if
 		  
+		  PushGroup.Enabled = true
+		  PullGroup.Enabled = true
+		  busyIndicator.Visible = False
+		  
+		  call queryRepository
+		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function queryRepository(optional WHERE as string = "TRUE") As Boolean
+		  dim repoData as RecordSet
+		  RepositoryList.DeleteAllRows
+		  
+		  repoData = db.SQLSelect("SELECT docid , userdata , valid FROM thirdway.repository WHERE " + WHERE + " ORDER BY creationstamp ASC")
+		  
+		  if db.Error then 
+		    writeLog("Database error when querying repository:")
+		    writeLog("... " + db.ErrorMessage)
+		    return False
+		  end if
+		  
+		  while not repoData.EOF
+		    
+		    RepositoryList.AddRow repoData.Field("userdata").StringValue , repoData.Field("valid").StringValue
+		    RepositoryList.RowTag(RepositoryList.LastIndex) = repoData.Field("docid").StringValue
+		    
+		    repoData.MoveNext
+		  wend
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1602,6 +1653,8 @@ End
 		      Title = "thirdway - client"
 		      
 		      writeLog("Client session created")
+		      
+		      call queryRepository
 		      
 		    else
 		      
@@ -1779,34 +1832,64 @@ End
 		  dim sourceFile as FolderItem = GetOpenFolderItem("*")
 		  if IsNull(sourceFile) then return
 		  
+		  PushGroup.Enabled = false // do not allow any more pushes before this one is complete
+		  PullGroup.Enabled = false
+		  busyIndicator.Visible = true
+		  
 		  dim source as BinaryStream = BinaryStream.Open(sourceFile , false)
 		  
 		  dim newRecord as new DatabaseRecord
-		  dim userdata as Int64 = Microseconds
-		  newRecord.Column("userdata") = str(userdata)
+		  newRecord.Column("userdata") = sourceFile.NativePath
 		  
 		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord , RemainCachedCheck.Value)  // start a data push
 		  
-		  writeLog(if(pushOutcome = "" , clientSession.LastError , pushOutcome))
+		  writeLog(if(pushOutcome = "" , clientSession.LastError , "Pushing " + pushOutcome))
+		  
+		  if pushOutcome = "" then 
+		    PushGroup.Enabled = true  // error; we are not expecting a response anymore
+		    PullGroup.Enabled = true
+		    busyIndicator.Visible = false
+		  end if
+		  
+		  call queryRepository
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events RepositoryList
+	#tag Event
+		Sub Open()
+		  me.ColumnCount = 2
+		  me.Heading(0) = "User Data"
+		  me.Heading(1) = "Valid"
+		  
+		  me.HasHeading = true
+		  me.ColumnWidths = "80%,20%"
+		  
+		  me.HeaderType(-1) = Listbox.HeaderTypes.NotSortable
+		  
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub DoubleClick()
+		  Dim row As Integer
+		  row = Me.RowFromXY(System.MouseX - Me.Left - Self.Left, System.MouseY - Me.Top - Self.Top)
+		  
+		  if busyIndicator.Visible then return
+		  if row < 0 then return
+		  
+		  pullUUIDfield.Text = RepositoryList.RowTag(row).StringValue
 		  
 		End Sub
 	#tag EndEvent
 #tag EndEvents
-#tag Events PushDir
+#tag Events WHEREbtn
 	#tag Event
 		Sub Action()
-		  dim sourceFile as FolderItem = GetOpenFolderItem("*")
-		  if IsNull(sourceFile) then return
-		  
-		  dim source as BinaryStream = BinaryStream.Open(sourceFile , false)
-		  
-		  dim newRecord as new DatabaseRecord
-		  dim userdata as Int64 = Microseconds
-		  newRecord.Column("userdata") = str(userdata)
-		  
-		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord)  // start a data push
-		  
-		  writeLog(if(pushOutcome = "" , clientSession.LastError , pushOutcome))
+		  if WHEREfield.Text.Trim = "" then
+		    call queryRepository
+		  else
+		    call queryRepository(WHEREfield.Text.Trim)
+		  end if
 		  
 		End Sub
 	#tag EndEvent
@@ -1823,6 +1906,13 @@ End
 		  
 		  me.HeaderType(-1) = Listbox.HeaderTypes.NotSortable
 		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events ClearCacheBtn
+	#tag Event
+		Sub Action()
+		  writeLog("Clear Cache outcome: " + str(controllerSession.clearCache))
 		End Sub
 	#tag EndEvent
 #tag EndEvents
