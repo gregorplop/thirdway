@@ -345,9 +345,9 @@ Protected Class thirdwayController
 		  
 		  select case thisJustIn.Type
 		    
-		  case "PUSH"
+		  case "PUSH" , "PULL"
 		    
-		    RaiseEvent WriteLog("PUSH rq received: " + thisJustIn.UUID) // in-app logging
+		    RaiseEvent WriteLog(thisJustIn.Type + " rq received: " + thisJustIn.UUID) // in-app logging
 		    
 		    dim freeWorkerIDX as Integer = AvailableWorker
 		    
@@ -364,6 +364,8 @@ Protected Class thirdwayController
 		    else  // use an existing, free worker
 		      WorkerPool(freeWorkerIDX).ProcessRequest(thisJustIn)
 		    end if
+		    
+		    
 		    
 		  end select
 		  

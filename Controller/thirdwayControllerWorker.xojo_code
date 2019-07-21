@@ -38,6 +38,7 @@ Implements Readable,Writeable
 		    pgsession.SQLExecute("UPDATE thirdway.repository SET valid = TRUE where docid = '" + currentRequest.UUID + "'")
 		    if pgsession.Error then
 		      // delete cached data perhaps?
+		      pgsession.SQLExecute("ROLLBACK")
 		      RaiseEvent Respond(currentRequest.UUID , new dictionary("thirdway_errormsg" : "Error activating new document: " + pgSession.ErrorMessage))
 		      return
 		    end if
@@ -45,6 +46,7 @@ Implements Readable,Writeable
 		    pgsession.SQLExecute("UPDATE thirdway.cache SET action = 'retain' WHERE docid = '" + currentRequest.UUID + "'")
 		    if pgsession.Error then
 		      // delete cached data perhaps?
+		      pgsession.SQLExecute("ROLLBACK")
 		      RaiseEvent Respond(currentRequest.UUID , new dictionary("thirdway_errormsg" : "Error updating cache status: " + pgSession.ErrorMessage))
 		      return
 		    end if
@@ -52,6 +54,7 @@ Implements Readable,Writeable
 		    pgsession.SQLExecute("COMMIT")
 		    if pgsession.Error then
 		      // delete cached data perhaps?
+		      pgsession.SQLExecute("ROLLBACK")
 		      RaiseEvent Respond(currentRequest.UUID , new dictionary("thirdway_errormsg" : "Error finalizing document import: " + pgSession.ErrorMessage))
 		      return
 		    end if
@@ -61,6 +64,12 @@ Implements Readable,Writeable
 		    end if
 		    
 		    RaiseEvent Respond(currentRequest.UUID , new dictionary("complete" : true))
+		    
+		    
+		    
+		  case "PULL"  // pulls a document out of the limnie into the cache (thirdway.cache)
+		    
+		    
 		    
 		    
 		    
@@ -154,13 +163,31 @@ Implements Readable,Writeable
 	#tag Method, Flags = &h1
 		Protected Sub Flush()
 		  // Part of the Writeable interface.
-		  
+		  // you MUST call this when the last fragment has been written in order to finalize the last cache record (ie set its lastfragment = true)
+		  // calling it signifies the end of the operatin
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function getUUID() As string
+		  if IsNull(pgSession) then return ""
+		  
+		  dim rs as RecordSet = pgSession.SQLSelect("SELECT uuid_in(md5(random()::text || clock_timestamp()::text)::cstring)")
+		  
+		  if pgSession.Error then 
+		    Return ""
+		  else
+		    Return rs.IdxField(1).StringValue
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function initReadable() As string
+		  // the readable interface in this class is used to treat the cache table as a read stream for a specific document...
+		  // ...and feed it to the Limnie. The Limnie write method accepts anything implementing the readable interface as input
 		  
 		  readable_LastFragment = 0
 		  Readable_nextFragment = 1
@@ -196,6 +223,12 @@ Implements Readable,Writeable
 		  
 		  return ""
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub initWriteable()
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -340,6 +373,18 @@ Implements Readable,Writeable
 
 	#tag Property, Flags = &h21
 		Private readable_ReadErrorMessage As string
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private writeable_LastFragment As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private writeable_NextFragment As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private writeable_WriteErrorMessage As String
 	#tag EndProperty
 
 

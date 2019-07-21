@@ -15,14 +15,14 @@ Protected Class thirdwayClient
 		    busy = true
 		  end if
 		  
-		  if not isUUID(UUID) then 
+		  if isUUID(UUID) = false then 
 		    mLastError = "Document ID is not a valid UUID"
 		    busy = false
 		    Return ""
 		  end if
 		  
 		  // check if the document exists and is valid
-		  dim repoSurvey as RecordSet = pgSession.SQLSelect("SELECT valid FROM thirdway.repository WHERE docid = '" + UUID + "'")
+		  dim repoSurvey as RecordSet = pgSession.SQLSelect("SELECT valid , bytesize FROM thirdway.repository WHERE docid = '" + UUID + "'")
 		  if pgSession.Error then
 		    mLastError = "Database error while surveying repository: " + pgSession.ErrorMessage
 		    busy = false
@@ -41,7 +41,6 @@ Protected Class thirdwayClient
 		    return ""
 		  end if
 		  
-		  
 		  // check if document is already in the content cache --if it is then there is no need to ask the controller to fetch it from the Limnie
 		  
 		  dim cacheSurvey as RecordSet = pgSession.SQLSelect("SELECT indx , lastfragment FROM thirdway.cache WHERE docid = '" + UUID + "' AND action = 'retain' ORDER BY indx ASC")
@@ -54,20 +53,28 @@ Protected Class thirdwayClient
 		  // if we have something valid in cache then check if all fragments are in order
 		  dim i as Integer = 1
 		  dim contentCached as Boolean = true
+		  dim last_lastfragment as Boolean
 		  
-		  while not cacheSurvey.EOF
+		  if cacheSurvey.RecordCount > 0 then
 		    
-		    if cacheSurvey.Field("indx").IntegerValue <> i then  // some fragment's missing
-		      contentCached = false
-		      exit while
+		    while not cacheSurvey.EOF
+		      
+		      if cacheSurvey.Field("indx").IntegerValue <> i then  // some fragment's missing
+		        contentCached = false
+		        exit while
+		      end if
+		      
+		      last_lastfragment = cacheSurvey.Field("lastfragment").BooleanValue
+		      i = i + 1
+		      cacheSurvey.MoveNext
+		    wend
+		    
+		    if last_lastfragment = false and contentCached = true then
+		      contentCached = False
 		    end if
 		    
-		    i = i + 1
-		    cacheSurvey.MoveNext
-		  wend
-		  
-		  if cacheSurvey.Field("lastfragment").BooleanValue = false and contentCached = true then
-		    contentCached = False
+		  else
+		    contentCached = false
 		  end if
 		  
 		  if contentCached = true then
@@ -76,25 +83,28 @@ Protected Class thirdwayClient
 		  
 		  // we now need to make a request to the controller to fetch a document from the Limnie and upload it to the content cache
 		  
+		  dim bytesize as Int64 = repoSurvey.Field("bytesize").Int64Value
+		  dim timeoutPeriod as Integer
+		  bytesize = Round(bytesize / 1000000) // now in MB and rounded
+		  timeoutPeriod = if(bytesize < 50 , 60 , bytesize * 1.5) // this is purely speculative, in a production implementation, this need to be more elaborate
 		  
+		  dim pullRequest as new pgReQ_request("PULL" , timeoutPeriod , true)
+		  pullRequest.UUID = getUUID // notice: this is the Request id and not the document id --unlike the push Request where these two are the same uuid
+		  pullRequest.RequestChannel = "thirdway_controller"  // send it there
+		  pullRequest.ResponseChannel = "thirdway_" + str(mCurrentPID)  // as set in constructor
+		  pullRequest.setParameter("docid" , UUID)  // the docid uuid: notice that it's different from the request id
 		  
-		  // 
-		  // dim pullRequest as new pgReQ_request("PULL" , timeoutPeriod , true)
-		  // importRequest.UUID = ActivePushjob.UUID  // request UUID = document UUID, because why the heck not?
-		  // importRequest.RequestChannel = "thirdway_controller"  // send it there
-		  // importRequest.ResponseChannel = "thirdway_" + str(mCurrentPID)  // as set in constructor
-		  // 
-		  // importRequest = sendRequest(importRequest)
-		  // 
-		  // if importRequest.Error then
-		  // rollback = rollbackPush(ActivePushjob.UUID)
-		  // importRequest.ErrorMessage = importRequest.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
-		  // RaiseEvent PushConcluded(importRequest)
-		  // busy = False
-		  // Return
-		  // end if
+		  pullRequest = sendRequest(pullRequest)
+		  
+		  if pullRequest.Error then
+		    mLastError = pullRequest.ErrorMessage
+		    busy = False
+		    Return ""
+		  end if
 		  
 		  busy = false
+		  
+		  Return pullRequest.UUID
 		  
 		  // out of our hands now: 
 		  // it's up to the controller to respond and conclude the pull-to-cache 

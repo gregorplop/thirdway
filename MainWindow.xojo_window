@@ -1931,6 +1931,42 @@ End
 		End Sub
 	#tag EndEvent
 #tag EndEvents
+#tag Events Pull2DiskBtn
+	#tag Event
+		Sub Action()
+		  dim pullOutcome as String = clientSession.CacheDocument(pullUUIDfield.Text.Trim)
+		  
+		  //MsgBox str(pullUUIDfield.Text.Trim.Len)
+		  
+		  if pullOutcome = "" then
+		    
+		    writeLog("Failed pull: " + clientSession.LastError)
+		    
+		  ElseIf pullOutcome = pullUUIDfield.Text.Trim then // already in cache
+		    
+		    writeLog("Pull OK: " + pullOutcome + " already in cache!")
+		    
+		    PushGroup.Enabled = false // do not allow any more actions before this one is complete
+		    PullGroup.Enabled = false
+		    busyIndicator.Visible = true
+		    
+		    // stuff to do afterwards
+		    
+		  Else // pull request made
+		    
+		    PushGroup.Enabled = false // do not allow any more actions before this one is complete
+		    PullGroup.Enabled = false
+		    busyIndicator.Visible = true
+		    
+		    writeLog("Pull request made: " + pullOutcome)
+		    
+		    // now we need to wait for the PullConcluded event to fire
+		    
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
 #tag Events RepositoryList
 	#tag Event
 		Sub Open()
