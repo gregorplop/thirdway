@@ -1,6 +1,108 @@
 #tag Class
 Protected Class thirdwayClient
 	#tag Method, Flags = &h0
+		Function CacheDocument(UUID as String) As string
+		  // calling this method instructs the controller to upload the content to the content cache table (thirdway.cache)
+		  // it's up to the app to fetch the content locally
+		  // returns request uuid or empty string for error: for error message read LastError
+		  // IF the document is already cached, it will return the document UUID instead of the Request UUID (because there is no request made!)
+		  // ...in this case, do not wait for the PullConcluded event (it will never arrive), just fetch the data directly from the cache
+		  
+		  if busy then 
+		    mLastError = "Client is busy doing some other I/O at the moment"
+		    Return ""
+		  else
+		    busy = true
+		  end if
+		  
+		  if not isUUID(UUID) then 
+		    mLastError = "Document ID is not a valid UUID"
+		    busy = false
+		    Return ""
+		  end if
+		  
+		  // check if the document exists and is valid
+		  dim repoSurvey as RecordSet = pgSession.SQLSelect("SELECT valid FROM thirdway.repository WHERE docid = '" + UUID + "'")
+		  if pgSession.Error then
+		    mLastError = "Database error while surveying repository: " + pgSession.ErrorMessage
+		    busy = false
+		    Return ""
+		  end if
+		  
+		  if repoSurvey.RecordCount = 0 then
+		    mLastError = "Document does not exist in repository"
+		    busy = false
+		    Return ""
+		  end if
+		  
+		  if repoSurvey.Field("valid").BooleanValue = false then
+		    mLastError = "Document is marked as invalid"
+		    busy = false
+		    return ""
+		  end if
+		  
+		  
+		  // check if document is already in the content cache --if it is then there is no need to ask the controller to fetch it from the Limnie
+		  
+		  dim cacheSurvey as RecordSet = pgSession.SQLSelect("SELECT indx , lastfragment FROM thirdway.cache WHERE docid = '" + UUID + "' AND action = 'retain' ORDER BY indx ASC")
+		  if pgSession.Error then
+		    mLastError = "Database error while surveying cache: " + pgSession.ErrorMessage
+		    busy = false
+		    Return ""
+		  end if
+		  
+		  // if we have something valid in cache then check if all fragments are in order
+		  dim i as Integer = 1
+		  dim contentCached as Boolean = true
+		  
+		  while not cacheSurvey.EOF
+		    
+		    if cacheSurvey.Field("indx").IntegerValue <> i then  // some fragment's missing
+		      contentCached = false
+		      exit while
+		    end if
+		    
+		    i = i + 1
+		    cacheSurvey.MoveNext
+		  wend
+		  
+		  if cacheSurvey.Field("lastfragment").BooleanValue = false and contentCached = true then
+		    contentCached = False
+		  end if
+		  
+		  if contentCached = true then
+		    Return UUID  // as noted before, this indicates an already cached document, no request is made to the controller
+		  end if
+		  
+		  // we now need to make a request to the controller to fetch a document from the Limnie and upload it to the content cache
+		  
+		  
+		  
+		  // 
+		  // dim pullRequest as new pgReQ_request("PULL" , timeoutPeriod , true)
+		  // importRequest.UUID = ActivePushjob.UUID  // request UUID = document UUID, because why the heck not?
+		  // importRequest.RequestChannel = "thirdway_controller"  // send it there
+		  // importRequest.ResponseChannel = "thirdway_" + str(mCurrentPID)  // as set in constructor
+		  // 
+		  // importRequest = sendRequest(importRequest)
+		  // 
+		  // if importRequest.Error then
+		  // rollback = rollbackPush(ActivePushjob.UUID)
+		  // importRequest.ErrorMessage = importRequest.ErrorMessage + " / Rollback " + if(rollback = true , "OK" , "fail")
+		  // RaiseEvent PushConcluded(importRequest)
+		  // busy = False
+		  // Return
+		  // end if
+		  
+		  busy = false
+		  
+		  // out of our hands now: 
+		  // it's up to the controller to respond and conclude the pull-to-cache 
+		  // if the controller does not respond then the pull will timeout sometime later
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(byref initSession as PostgreSQLDatabase)
 		  if IsNull(initSession) then
 		    mLastError = "No valid postgres session"
@@ -39,7 +141,7 @@ Protected Class thirdwayClient
 
 	#tag Method, Flags = &h0
 		Function CreateDocument(source as Readable, dbRecord as DatabaseRecord, optional remainCached as Boolean = true) As string
-		  // returns temporary document uuid or empty string for error: for error message read LastError
+		  // returns document uuid or empty string for error: for error message read LastError
 		  
 		  if busy then
 		    mLastError = "client is still busy"
@@ -58,7 +160,7 @@ Protected Class thirdwayClient
 		  
 		  dim docUUID as String = getUUID  
 		  
-		  ActivePushjob = new PushJob(source , dbRecord , docUUID , remainCached)
+		  ActivePushjob = new PushJob(source , dbRecord , docUUID , remainCached)  // only one is allowed at any given time
 		  pushThread.Run // start uploading to cache
 		  
 		  Return docUUID  // inform the app that this is being processed. it should expect an event when done/fail/timeout
@@ -372,6 +474,15 @@ Protected Class thirdwayClient
 		    dataPushed = dataPushed + fragmentData.Len  // in bytes
 		  loop
 		  
+		  // write the bytesize to the document record
+		  pgSession.SQLExecute("UPDATE thirdway.repository SET bytesize = " + str(dataPushed) + " WHERE docid = '" + ActivePushjob.UUID + "'")
+		  if pgSession.Error then
+		    failResponse.setParameter("thirdway_errormsg" , "Error updating repository document record: " + pgSession.ErrorMessage)
+		    RaiseEvent PushConcluded(failResponse)  // this is what the response we've been handcrafting is for: failure before involving the controller
+		    busy = false
+		    return  // quit pushing
+		  end if
+		  
 		  dataPushed = Round(dataPushed / 1000000) // now in MB and rounded
 		  timeoutPeriod = if(dataPushed < 50 , 60 , dataPushed * 1.2) // this is purely speculative
 		  
@@ -553,6 +664,10 @@ Protected Class thirdwayClient
 		End Function
 	#tag EndMethod
 
+
+	#tag Hook, Flags = &h0
+		Event PullConcluded(requestData as pgReQ_request)
+	#tag EndHook
 
 	#tag Hook, Flags = &h0
 		Event PushConcluded(requestData as pgReQ_request)

@@ -1165,7 +1165,7 @@ Begin Window MainWindow
          GridLinesVertical=   0
          HasHeading      =   True
          HeadingIndex    =   -1
-         Height          =   348
+         Height          =   336
          HelpTag         =   "double click to auto-fill pull data UUID"
          Hierarchical    =   False
          Index           =   -2147483648
@@ -1190,7 +1190,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   14.0
          TextUnit        =   0
-         Top             =   356
+         Top             =   368
          Transparent     =   False
          Underline       =   False
          UseFocusRing    =   True
@@ -1293,7 +1293,7 @@ Begin Window MainWindow
          GridLinesVertical=   0
          HasHeading      =   True
          HeadingIndex    =   -1
-         Height          =   523
+         Height          =   508
          HelpTag         =   ""
          Hierarchical    =   False
          Index           =   -2147483648
@@ -1318,7 +1318,7 @@ Begin Window MainWindow
          TextFont        =   "Consolas"
          TextSize        =   14.0
          TextUnit        =   0
-         Top             =   175
+         Top             =   190
          Transparent     =   False
          Underline       =   False
          UseFocusRing    =   True
@@ -1358,6 +1358,76 @@ Begin Window MainWindow
          Underline       =   False
          Visible         =   True
          Width           =   102
+      End
+      Begin Label RepoContentLabel
+         AutoDeactivate  =   True
+         Bold            =   False
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   True
+         LockTop         =   True
+         Multiline       =   False
+         Scope           =   0
+         Selectable      =   False
+         TabIndex        =   7
+         TabPanelIndex   =   4
+         TabStop         =   True
+         Text            =   "thirdway.repository contents"
+         TextAlign       =   0
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   346
+         Transparent     =   True
+         Underline       =   False
+         Visible         =   True
+         Width           =   395
+      End
+      Begin Label RepoContentLabel1
+         AutoDeactivate  =   True
+         Bold            =   False
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   True
+         LockTop         =   True
+         Multiline       =   False
+         Scope           =   0
+         Selectable      =   False
+         TabIndex        =   4
+         TabPanelIndex   =   3
+         TabStop         =   True
+         Text            =   "thirdway.cache contents"
+         TextAlign       =   0
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   167
+         Transparent     =   True
+         Underline       =   False
+         Visible         =   True
+         Width           =   395
       End
    End
    Begin Listbox log
@@ -1506,7 +1576,7 @@ End
 		  writeLog("...conf table created")
 		  
 		  // this is the document table
-		  db.SQLExecute("CREATE TABLE thirdway.repository(docid UUID PRIMARY KEY , creationstamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now() , userdata TEXT NOT NULL , importduration BIGINT , valid BOOLEAN NOT NULL DEFAULT FALSE) TABLESPACE thirdway")
+		  db.SQLExecute("CREATE TABLE thirdway.repository(docid UUID PRIMARY KEY , creationstamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now() , userdata TEXT NOT NULL , importduration BIGINT , bytesize BIGINT NOT NULL DEFAULT 0 , valid BOOLEAN NOT NULL DEFAULT FALSE) TABLESPACE thirdway")
 		  if db.Error then Return db.ErrorMessage
 		  writeLog("...repository table created")
 		  
@@ -1594,7 +1664,7 @@ End
 		  dim repoData as RecordSet
 		  RepositoryList.DeleteAllRows
 		  
-		  repoData = db.SQLSelect("SELECT docid , userdata , valid FROM thirdway.repository WHERE " + WHERE + " ORDER BY creationstamp ASC")
+		  repoData = db.SQLSelect("SELECT docid , userdata , valid , bytesize FROM thirdway.repository WHERE " + WHERE + " ORDER BY creationstamp ASC")
 		  
 		  if db.Error then 
 		    writeLog("Database error when querying repository:")
@@ -1602,9 +1672,15 @@ End
 		    return False
 		  end if
 		  
+		  dim row(1) as String
+		  
 		  while not repoData.EOF
 		    
-		    RepositoryList.AddRow repoData.Field("userdata").StringValue , repoData.Field("valid").StringValue
+		    row(0) = repoData.Field("userdata").StringValue
+		    row(1) = if(repoData.Field("valid").BooleanValue = false , "-1" , str(repoData.Field("bytesize").Int64Value / 1024))
+		    
+		    RepositoryList.AddRow row
+		    
 		    RepositoryList.RowTag(RepositoryList.LastIndex) = repoData.Field("docid").StringValue
 		    
 		    repoData.MoveNext
@@ -1860,10 +1936,10 @@ End
 		Sub Open()
 		  me.ColumnCount = 2
 		  me.Heading(0) = "User Data"
-		  me.Heading(1) = "Valid"
+		  me.Heading(1) = "Size (kB)"
 		  
 		  me.HasHeading = true
-		  me.ColumnWidths = "80%,20%"
+		  me.ColumnWidths = "70%,30%"
 		  
 		  me.HeaderType(-1) = Listbox.HeaderTypes.NotSortable
 		  
