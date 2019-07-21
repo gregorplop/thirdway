@@ -69,8 +69,27 @@ Implements Readable,Writeable
 		    
 		  case "PULL"  // pulls a document out of the limnie into the cache (thirdway.cache)
 		    
+		    dim docid as String = currentRequest.getParameter("docid").StringValue
 		    
+		    initWriteable
 		    
+		    dim cachedDocument as Limnie.Document = LimnieSession.readDocument(me , "defaultpool" , docid , true)
+		    
+		    if cachedDocument.error then
+		      call clearCache(docid)
+		      RaiseEvent Respond(currentRequest.UUID , new Dictionary("thirdway_errormsg" : "Object storage error: " + cachedDocument.ErrorMessage))
+		      Return
+		    end if
+		    
+		    Flush  // finalize cache records for document
+		    
+		    if WriteError then
+		      call clearCache(docid)
+		      RaiseEvent Respond(currentRequest.UUID , new Dictionary("thirdway_errormsg" : "Error finalizing cache: " + writeable_WriteErrorMessage))
+		      Return
+		    end if
+		    
+		    RaiseEvent Respond(currentRequest.UUID , new dictionary("complete" : true))
 		    
 		    
 		  end select
