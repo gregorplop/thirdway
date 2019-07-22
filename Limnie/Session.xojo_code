@@ -1120,7 +1120,7 @@ Protected Class Session
 		      
 		      if target.WriteError then
 		        fragmentStream.Close
-		        Return new Limnie.Document("Error writing fragment " + str(docInfo.fragments(i).objidx) + " on medium " + poolname + "." + str(docInfo.fragments(i).mediumidx))
+		        Return new Limnie.Document("Error writing fragment " + str(docInfo.fragments(i).objidx) + " on target stream")
 		      end if
 		      
 		      md5calculator.Process(content)

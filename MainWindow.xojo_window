@@ -1639,6 +1639,32 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub PullConcludedHandler(sender as thirdwayClient, requestData as pgReQ_request)
+		  writeLog("Pull concluded: " + if(requestData.Error , requestData.ErrorMessage , "OK"))
+		  
+		  if requestData.Error then
+		    writeLog("...queue error: " + requestData.ErrorMessage)
+		  ElseIf IsNull(requestData.getParameter("thirdway_errormsg")) = false then
+		    writeLog("...app error: " + requestData.getParameter("thirdway_errormsg").StringValue)
+		  else
+		    writeLog("...ok")
+		  end if
+		  
+		  // now we do stuff with the content that we know for certain that is waiting in the cache
+		  
+		  
+		  
+		  
+		  
+		  // UI should be enabled again
+		  PushGroup.Enabled = true
+		  PullGroup.Enabled = true
+		  busyIndicator.Visible = False
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub PushConcludedHandler(sender as thirdwayClient, requestData as pgReQ_request)
 		  writeLog("Push concluded: " + if(requestData.Error , requestData.ErrorMessage , "OK"))
 		  
@@ -1723,6 +1749,7 @@ End
 		    clientSession = new thirdwayClient(db)
 		    if clientSession.LastError = "" then
 		      AddHandler clientSession.PushConcluded , WeakAddressOf PushConcludedHandler
+		      AddHandler clientSession.PullConcluded , WeakAddressOf PullConcludedHandler
 		      
 		      MainPanel.Value = 3
 		      writeLog("Client role selected")
@@ -1935,8 +1962,6 @@ End
 	#tag Event
 		Sub Action()
 		  dim pullOutcome as String = clientSession.CacheDocument(pullUUIDfield.Text.Trim)
-		  
-		  //MsgBox str(pullUUIDfield.Text.Trim.Len)
 		  
 		  if pullOutcome = "" then
 		    

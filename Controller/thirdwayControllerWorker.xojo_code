@@ -73,11 +73,11 @@ Implements Readable,Writeable
 		    
 		    initWriteable
 		    
-		    dim cachedDocument as Limnie.Document = LimnieSession.readDocument(me , "defaultpool" , docid , true)
+		    dim cachedDocument as Limnie.Document = LimnieSession.readDocument(me , "defaultpool" , docid.Uppercase , true)
 		    
 		    if cachedDocument.error then
 		      call clearCache(docid)
-		      RaiseEvent Respond(currentRequest.UUID , new Dictionary("thirdway_errormsg" : "Object storage error: " + cachedDocument.ErrorMessage))
+		      RaiseEvent Respond(currentRequest.UUID , new Dictionary("thirdway_errormsg" : "Object storage error: " + cachedDocument.ErrorMessage + " : " + writeable_writeErrorMessage))
 		      Return
 		    end if
 		    
@@ -185,6 +185,25 @@ Implements Readable,Writeable
 		  // you MUST call this when the last fragment has been written in order to finalize the last cache record (ie set its lastfragment = true)
 		  // calling it signifies the end of the operatin
 		  
+		  writeable_WriteErrorMessage = ""
+		  
+		  dim docid as string = currentRequest.getParameter("docid").StringValue
+		  
+		  pgsession.SQLExecute("UPDATE thirdway.cache SET lastfragment = TRUE WHERE fragmentid = '" + writeable_LastFragmentUUID + "'")
+		  
+		  if pgsession.Error then 
+		    writeable_WriteErrorMessage = "Error updating lastfragment flag: " + pgsession.ErrorMessage
+		    Return
+		  end if
+		  
+		  pgsession.SQLExecute("UPDATE thirdway.cache SET action = 'retain' WHERE docid = '" + docid + "'")
+		  
+		  if pgsession.Error then 
+		    writeable_WriteErrorMessage = "Error updating cache action flag: " + pgsession.ErrorMessage
+		    Return
+		  end if
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -246,6 +265,8 @@ Implements Readable,Writeable
 
 	#tag Method, Flags = &h21
 		Private Sub initWriteable()
+		  writeable_NextFragment = 1
+		  writeable_WriteErrorMessage = ""
 		  
 		End Sub
 	#tag EndMethod
@@ -340,6 +361,35 @@ Implements Readable,Writeable
 		Protected Sub Write(text As String)
 		  // Part of the Writeable interface.
 		  
+		  dim FragmentUUID as String = getUUID
+		  dim now as new date
+		  dim docid as string = currentRequest.getParameter("docid").StringValue
+		  
+		  if FragmentUUID = "" then 
+		    writeable_WriteErrorMessage = "Error generating fragment UUID"
+		    return
+		  end if
+		  
+		  dim newCacheRecord as new DatabaseRecord
+		  
+		  newCacheRecord.Column("fragmentid") = FragmentUUID
+		  newCacheRecord.DateColumn("creationstamp") = now
+		  newCacheRecord.Column("docid") = docid
+		  newCacheRecord.IntegerColumn("indx") = writeable_NextFragment
+		  newCacheRecord.BooleanColumn("lastfragment") = False
+		  newCacheRecord.Column("action") = "pull"
+		  newCacheRecord.BlobColumn("content") = Text
+		  
+		  pgsession.InsertRecord("thirdway.cache" , newCacheRecord)
+		  
+		  if pgsession.Error then
+		    writeable_WriteErrorMessage = "Error writing cache record: " + pgsession.ErrorMessage
+		    Return
+		  end if
+		  
+		  writeable_NextFragment = writeable_NextFragment + 1
+		  writeable_LastFragmentUUID = FragmentUUID
+		  writeable_WriteErrorMessage = ""
 		  
 		End Sub
 	#tag EndMethod
@@ -348,6 +398,11 @@ Implements Readable,Writeable
 		Protected Function WriteError() As Boolean
 		  // Part of the Writeable interface.
 		  
+		  if writeable_WriteErrorMessage = "" then
+		    return false
+		  else
+		    return true
+		  end if
 		  
 		End Function
 	#tag EndMethod
@@ -395,7 +450,7 @@ Implements Readable,Writeable
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private writeable_LastFragment As Integer
+		Private writeable_LastFragmentUUID As string
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

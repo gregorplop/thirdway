@@ -553,6 +553,10 @@ Protected Class thirdwayClient
 		    
 		    RaiseEvent PushConcluded(thisJustIn)
 		    
+		  case "PULL"
+		    
+		    RaiseEvent PullConcluded(thisJustIn)
+		    
 		  end select
 		  
 		End Sub
