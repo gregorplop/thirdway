@@ -78,6 +78,7 @@ Protected Class thirdwayClient
 		  end if
 		  
 		  if contentCached = true then
+		    busy = false
 		    Return UUID  // as noted before, this indicates an already cached document, no request is made to the controller
 		  end if
 		  

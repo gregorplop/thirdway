@@ -1090,7 +1090,7 @@ Begin Window MainWindow
             Default         =   False
             Enabled         =   True
             Height          =   40
-            HelpTag         =   ""
+            HelpTag         =   "Creates a desktop folder called Retrievals"
             Index           =   -2147483648
             InitialParent   =   "PullGroup"
             Italic          =   False
@@ -1648,10 +1648,19 @@ End
 		    writeLog("...app error: " + requestData.getParameter("thirdway_errormsg").StringValue)
 		  else
 		    writeLog("...ok")
+		    
+		    dim targetfile as FolderItem // saveCachedDocument fills in the output document file
+		    dim saveOutcome as String = saveCachedDocument(requestData.getParameter("docid").StringValue , SpecialFolder.Desktop.Child("Retrieved"), targetfile)
+		    
+		    if saveOutcome = "" then
+		      writeLog "...write document ok"
+		      if OpenWhenPulled.Value = true then
+		        targetfile.launch
+		      end if
+		    else
+		      writeLog("...error writing document: " + saveOutcome)
+		    end if
 		  end if
-		  
-		  // now we do stuff with the content that we know for certain that is waiting in the cache
-		  
 		  
 		  
 		  
@@ -1731,6 +1740,71 @@ End
 		  
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function saveCachedDocument(UUID as String, targetFolder as FolderItem, byref CreatedFile as FolderItem) As string
+		  // returns empty for success or error message if fail
+		  // also, does not check for fragment integrity
+		  
+		  if IsNull(targetFolder) then return "Null target folder"
+		  if targetFolder.Exists = false then Return "Target folder does not exist"
+		  
+		  dim delimiter as string
+		  
+		  #If TargetWindows then
+		    delimiter = "\"
+		  #Else
+		    delimiter = "/"
+		  #Endif
+		  
+		  dim repoSurvey as RecordSet = db.SQLSelect("SELECT userdata FROM thirdway.repository WHERE docid = '" + UUID + "'")
+		  
+		  if db.Error then return db.ErrorMessage
+		  if repoSurvey.RecordCount = 0 then Return "No such document in repository"
+		  
+		  dim filename as String = repoSurvey.Field("userdata").StringValue.NthField(delimiter , repoSurvey.Field("userdata").StringValue.CountFields(delimiter))
+		  dim file as FolderItem = targetFolder.Child(filename)
+		  
+		  if file.Exists then 
+		    file.Delete  // overwrite whatever's there
+		    if file.LastErrorCode <> 0 then return "file exists, tried to delete it and failed!"
+		  end if
+		  
+		  dim writeStream as BinaryStream = BinaryStream.Create(file)  // we will not handle any exceptions; not a production system
+		  
+		  dim fragmentCounter as Integer = 1
+		  dim lastFragment as Boolean = false
+		  dim fragmentData as RecordSet
+		  
+		  do
+		    
+		    fragmentData = db.SQLSelect("SELECT * FROM thirdway.cache WHERE docid = '" + UUID + "' AND indx = " + str(fragmentCounter))
+		    if db.Error then
+		      writeStream.Close
+		      file.Delete
+		      return "Database error while reading cache: " + db.ErrorMessage
+		    end if
+		    
+		    if fragmentData.RecordCount = 0 then
+		      writeStream.Close
+		      file.Delete
+		      return "A fragment is missing"
+		    end if
+		    
+		    writeStream.Write(fragmentData.Field("content").StringValue)
+		    
+		    fragmentCounter = fragmentCounter + 1
+		    lastFragment = fragmentData.Field("lastfragment").BooleanValue
+		    
+		  loop until lastFragment = true
+		  
+		  writeStream.Close
+		  CreatedFile = file
+		  return ""
+		  
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1976,6 +2050,23 @@ End
 		    busyIndicator.Visible = true
 		    
 		    // stuff to do afterwards
+		    
+		    dim targetfile as FolderItem // saveCachedDocument fills in the output document file
+		    dim saveOutcome as String = saveCachedDocument(pullOutcome , SpecialFolder.Desktop.Child("Retrieved"), targetfile)
+		    
+		    if saveOutcome = "" then
+		      writeLog "...write document ok"
+		      if OpenWhenPulled.Value = true then
+		        targetfile.launch
+		      end if
+		    else
+		      writeLog("...error writing document: " + saveOutcome)
+		    end if
+		    
+		    // UI should be enabled again
+		    PushGroup.Enabled = true
+		    PullGroup.Enabled = true
+		    busyIndicator.Visible = False
 		    
 		  Else // pull request made
 		    
