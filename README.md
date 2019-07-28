@@ -1,10 +1,10 @@
 # thirdway: an experiment in content services backend architecture
 \
 _thirdway_ is an exploration on the viability of a content delivery architecture in a document management system.\
-The problem it is trying to address is binary content storage & delivery via an RDBMS and it gets its name from the debate around the question: 
+The problem it is trying to address, is binary content storage & delivery via an RDBMS and it gets its name from the debate around the question: 
 >**"How should I store my binary content? As blobs directly into the database, or as files in the filesystem, while keeping their paths referenced in a database field?"**
 
-We won't go into the pros and cons of each solution (there's plenty of material around it in forums), but if we arbitrarily call the blob approach "the first way" and the filesystem approach "the second way", then what we'd be suggesting here could be "the third way".
+We won't go into the pros and cons of each approach (there's plenty of material around it in forums), but if we arbitrarily call the blob approach "the first way" and the filesystem approach "the second way", then what we'd be suggesting here could be "a third way".
 
 ### So, what is _thirdway_ ?
 
@@ -29,7 +29,12 @@ Architecturally speaking, it consists of the following:
 * **In a PULL scenario,** the client needs access to the content of certain document, whose UUID is known.
 * The client calls the PULL method that initially checks (locally) whether this particular document is already cached. If it is, it immediatelly returns that information to the calling method and makes no request to the controller: This is a cache hit.
 * If the content is not cached, the controller will have to get involved. A PULL request is sent by the client and when the controller receives it, assigns a worker to pull all the document fragments from the Limnie media to the database cache table.
-* When all fragments are written to the cache table, a response is sent back to the client. The PULL process ends with the data waiting in the cache table. The client is now free to download the content from the database server.
+* When all fragments are written to the cache table, a response is sent back to the client. The PULL concludes with the data waiting in the cache table. The client is now free to download the content from the database server.
 
-### Design characteristics of a thirdway-inspired implementation (the PROS)
+### Design characteristics of a thirdway-inspired implementation (the PROs)
+* The content storage is not the RDBMS itself, saving the DBA the trouble to maintain a huge database. The cache table could be excluded from backing up the database. Moreover, an automated cache invalidation and cleanup process could run at set intervals and make sure the cache does not grow beyond a certain limit.
+* The content is not stored as individual files on the filesystem, paving the way for inconsistencies between what the document table says there is and what there actually is (for whatever reason: improperly assigned rights in combination to careless users, negligent sysadmin, ransomware attack, you name it...)
+* Faster backup/migration/access rights update on the content: The filesystem objects that are subject to these operations are a few GByte-long files (the Limnie media), not a gazillion 100kb PDFs.
+* Simplicity and...RADness I (if there can be such word!): your client apps need one session to the database server to handle authentication, queries, metadata retrieval, content retrieval, IPC with a centralized control authority.
+* Simplicity and RADness II: Server-side, you only need to implement any extra functionality you need on the controller service app (other than the content I/O that is). All the rest is handled by the -extensively proven- database server.
 
