@@ -25,5 +25,5 @@ Architecturally speaking, it consists of the following:
 * In a PUSH scenario, a new document is created and its binary content needs to be stored (pushed) into the Limnie pool.
 * The client is responsible for creating the repository record (initially in an "invalid" state) and upload the binary content as fragments into the cache table. It then has to send a PUSH request to the controller and wait for its response (or for the response timeout)
 * When the controller receives that PUSH request, it creates a new Limnie object and one by one, it reads the fragments from the cache table and stores them into the default pool. When finished without error, it will change the document's repository record to "valid" and will (optionally) clear the cached content. It will then respond to the PUSH request, signalling success. 
-* While the controller is handling the PUSH request, the client is waiting for a response to that request. When it receives it and it's a success, it can rest assured that 
+* While the controller is handling the PUSH request, the client is waiting for a response to that request. It will either receive it or there will be a timeout. The timeout period is calculated according to the size of the document, but it's really arbitrary and it will likely lead to problems in a production implementation.
 
