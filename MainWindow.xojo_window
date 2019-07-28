@@ -1090,7 +1090,7 @@ Begin Window MainWindow
             Default         =   False
             Enabled         =   True
             Height          =   40
-            HelpTag         =   "Creates a desktop folder called Retrievals"
+            HelpTag         =   "Creates a desktop folder called thirdway_retrievals"
             Index           =   -2147483648
             InitialParent   =   "PullGroup"
             Italic          =   False
@@ -1684,7 +1684,7 @@ End
 		    writeLog("...ok")
 		    
 		    dim targetfile as FolderItem // saveCachedDocument fills in the output document file
-		    dim saveOutcome as String = saveCachedDocument(requestData.getParameter("docid").StringValue , SpecialFolder.Desktop.Child("Retrievals"), targetfile)
+		    dim saveOutcome as String = saveCachedDocument(requestData.getParameter("docid").StringValue , SpecialFolder.Desktop.Child("thirdway_retrievals"), targetfile)
 		    
 		    if saveOutcome = "" then
 		      writeLog "...write document ok"
@@ -2088,7 +2088,7 @@ End
 		    // stuff to do afterwards
 		    
 		    dim targetfile as FolderItem // saveCachedDocument fills in the output document file
-		    dim saveOutcome as String = saveCachedDocument(pullOutcome , SpecialFolder.Desktop.Child("Retrievals"), targetfile)
+		    dim saveOutcome as String = saveCachedDocument(pullOutcome , SpecialFolder.Desktop.Child("thirdway_retrievals"), targetfile)
 		    
 		    if saveOutcome = "" then
 		      writeLog "...write document ok"

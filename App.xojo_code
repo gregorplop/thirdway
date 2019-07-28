@@ -3,8 +3,8 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  if SpecialFolder.Desktop.Child("Retrievals").Exists = false then 
-		    SpecialFolder.Desktop.Child("Retrievals").CreateAsFolder
+		  if SpecialFolder.Desktop.Child("thirdway_retrievals").Exists = false then 
+		    SpecialFolder.Desktop.Child("thirdway_retrievals").CreateAsFolder
 		  end if
 		End Sub
 	#tag EndEvent
