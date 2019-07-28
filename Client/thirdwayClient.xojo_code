@@ -114,6 +114,18 @@ Protected Class thirdwayClient
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function clearCache(UUID as string) As Boolean
+		  if isUUID(UUID) then
+		    pgSession.SQLExecute("DELETE FROM thirdway.cache WHERE docid = '" + UUID + "'")
+		    Return not pgsession.Error
+		  else
+		    Return false
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(byref initSession as PostgreSQLDatabase)
 		  if IsNull(initSession) then
 		    mLastError = "No valid postgres session"
@@ -410,7 +422,6 @@ Protected Class thirdwayClient
 		Private Sub PushThreadAction(sender as Thread)
 		  busy = true
 		  dim bytes2read as Integer = MByte * fragmentSize  // this has to be the same across all clients/controller/limnes
-		  dim msecs as Int64 = Microseconds / 1000  // part of measuring how long the push lasts for
 		  
 		  // prepare a failure response for use if some error occurs before sending the actual request to the controller
 		  dim failResponse as new pgReQ_request("PUSH" , 0 , true)
@@ -430,7 +441,6 @@ Protected Class thirdwayClient
 		  
 		  // build the repository document record
 		  ActivePushjob.dbRecord.Column("docid") = ActivePushjob.UUID  // the doc UUID for the push
-		  ActivePushjob.dbRecord.Int64Column("importduration") = msecs
 		  ActivePushjob.dbRecord.BooleanColumn("valid") = false  // this is the initial form of the document record, things haven't settled yet--most notably: the docid
 		  // we expect the app to have filled the userdata column  --but NOT any of the above. also creationstamp is filled automatically
 		  pgSession.InsertRecord("thirdway.repository" , ActivePushjob.dbRecord)  

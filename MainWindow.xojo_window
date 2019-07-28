@@ -852,7 +852,7 @@ Begin Window MainWindow
             Bold            =   False
             ButtonStyle     =   "0"
             Cancel          =   False
-            Caption         =   "Cleanup"
+            Caption         =   "Cleanup DB"
             Default         =   False
             Enabled         =   True
             Height          =   36
@@ -975,7 +975,7 @@ Begin Window MainWindow
             Visible         =   True
             Width           =   160
          End
-         Begin CheckBox RemainCachedCheck
+         Begin CheckBox pushRemainCachedCheck
             AutoDeactivate  =   True
             Bold            =   False
             Caption         =   "Remain Cached"
@@ -1139,7 +1139,40 @@ Begin Window MainWindow
             TextFont        =   "System"
             TextSize        =   16.0
             TextUnit        =   0
-            Top             =   283
+            Top             =   273
+            Transparent     =   True
+            Underline       =   False
+            Value           =   False
+            Visible         =   True
+            Width           =   160
+         End
+         Begin CheckBox pullRemainCachedCheck
+            AutoDeactivate  =   True
+            Bold            =   False
+            Caption         =   "Remain Cached"
+            DataField       =   ""
+            DataSource      =   ""
+            Enabled         =   True
+            Height          =   20
+            HelpTag         =   ""
+            Index           =   -2147483648
+            InitialParent   =   "PullGroup"
+            Italic          =   False
+            Left            =   235
+            LockBottom      =   False
+            LockedInPosition=   False
+            LockLeft        =   True
+            LockRight       =   False
+            LockTop         =   True
+            Scope           =   0
+            State           =   0
+            TabIndex        =   3
+            TabPanelIndex   =   4
+            TabStop         =   True
+            TextFont        =   "System"
+            TextSize        =   16.0
+            TextUnit        =   0
+            Top             =   294
             Transparent     =   True
             Underline       =   False
             Value           =   False
@@ -1576,7 +1609,7 @@ End
 		  writeLog("...conf table created")
 		  
 		  // this is the document table
-		  db.SQLExecute("CREATE TABLE thirdway.repository(docid UUID PRIMARY KEY , creationstamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now() , userdata TEXT NOT NULL , importduration BIGINT , bytesize BIGINT NOT NULL DEFAULT 0 , valid BOOLEAN NOT NULL DEFAULT FALSE) TABLESPACE thirdway")
+		  db.SQLExecute("CREATE TABLE thirdway.repository(docid UUID PRIMARY KEY , creationstamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now() , userdata TEXT NOT NULL , bytesize BIGINT NOT NULL DEFAULT 0 , valid BOOLEAN NOT NULL DEFAULT FALSE) TABLESPACE thirdway")
 		  if db.Error then Return db.ErrorMessage
 		  writeLog("...repository table created")
 		  
@@ -1646,11 +1679,12 @@ End
 		    writeLog("...queue error: " + requestData.ErrorMessage)
 		  ElseIf IsNull(requestData.getParameter("thirdway_errormsg")) = false then
 		    writeLog("...app error: " + requestData.getParameter("thirdway_errormsg").StringValue)
+		    
 		  else
 		    writeLog("...ok")
 		    
 		    dim targetfile as FolderItem // saveCachedDocument fills in the output document file
-		    dim saveOutcome as String = saveCachedDocument(requestData.getParameter("docid").StringValue , SpecialFolder.Desktop.Child("Retrieved"), targetfile)
+		    dim saveOutcome as String = saveCachedDocument(requestData.getParameter("docid").StringValue , SpecialFolder.Desktop.Child("Retrievals"), targetfile)
 		    
 		    if saveOutcome = "" then
 		      writeLog "...write document ok"
@@ -1660,10 +1694,12 @@ End
 		    else
 		      writeLog("...error writing document: " + saveOutcome)
 		    end if
+		    
+		    if pullRemainCachedCheck.value = false then
+		      call clientSession.clearCache(requestData.getParameter("docid").StringValue) // we don't really care about success or not
+		    end if
+		    
 		  end if
-		  
-		  
-		  
 		  
 		  // UI should be enabled again
 		  PushGroup.Enabled = true
@@ -2018,7 +2054,7 @@ End
 		  dim newRecord as new DatabaseRecord
 		  newRecord.Column("userdata") = sourceFile.NativePath
 		  
-		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord , RemainCachedCheck.Value)  // start a data push
+		  dim pushOutcome as string = clientSession.CreateDocument(source , newRecord , pushRemainCachedCheck.Value)  // start a data push
 		  
 		  writeLog(if(pushOutcome = "" , clientSession.LastError , "Pushing " + pushOutcome))
 		  
@@ -2052,7 +2088,7 @@ End
 		    // stuff to do afterwards
 		    
 		    dim targetfile as FolderItem // saveCachedDocument fills in the output document file
-		    dim saveOutcome as String = saveCachedDocument(pullOutcome , SpecialFolder.Desktop.Child("Retrieved"), targetfile)
+		    dim saveOutcome as String = saveCachedDocument(pullOutcome , SpecialFolder.Desktop.Child("Retrievals"), targetfile)
 		    
 		    if saveOutcome = "" then
 		      writeLog "...write document ok"
