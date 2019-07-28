@@ -32,9 +32,11 @@ Architecturally speaking, it consists of the following:
 * When all fragments are written to the cache table, a response is sent back to the client. The PULL concludes with the data waiting in the cache table. The client is now free to download the content from the database server.
 
 ### Design characteristics of a thirdway-inspired implementation (the PROs)
-* The content storage is not the RDBMS itself, saving the DBA the trouble to maintain a huge database. The cache table could be excluded from backing up the database. Moreover, an automated cache invalidation and cleanup process could run at set intervals and make sure the cache does not grow beyond a certain limit.
-* The content is not stored as individual files on the filesystem, paving the way for inconsistencies between what the document table says there is and what there actually is (for whatever reason: improperly assigned rights in combination to careless users, negligent sysadmin, ransomware attack, you name it...)
-* Faster backup/migration/access rights update on the content: The filesystem objects that are subject to these operations are a few GByte-long files (the Limnie media), not a gazillion 100kb PDFs.
+* The content storage is not the RDBMS itself, saving the DBA the trouble to maintain a huge database. The cache table could be safely excluded from your backup policy. Moreover, an automated cache invalidation and cleanup process could run at set intervals and make sure the cache does not grow beyond a certain limit.
+* The content is not stored as individual files on the filesystem, paving the way for inconsistencies between what the document table says there is and what there actually is (for whatever reason: improperly assigned rights in combination with careless users, negligent sysadmins, ransomware attacks, you name it...)
+* Faster backup/migration/access rights update on the content: The filesystem objects that are subject to these operations are a few GByte-long files (the Limnie media), not a gazillion of 100kb PDFs.
 * Simplicity and...RADness I (if there can be such word!): your client apps need one session to the database server to handle authentication, queries, metadata retrieval, content retrieval, IPC with a centralized control authority.
-* Simplicity and RADness II: Server-side, you only need to implement any extra functionality you need on the controller service app (other than the content I/O that is). All the rest is handled by the -extensively proven- database server.
+* Simplicity and RADness II: Server-side, you only need to implement any extra business functionality in the controller service app (other than the content I/O that is). All the rest is handled by the (super-reliable) PostgreSQL database server.
+
+### More design characteristics of a thirdway-inspired implementation (the CONs)
 
