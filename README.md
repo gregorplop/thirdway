@@ -26,8 +26,8 @@ Architecturally speaking, it consists of the following:
 * The client is responsible for creating the repository record (initially in an "invalid" state) and upload the binary content as fragments into the cache table. It then has to send a PUSH request to the controller and wait for its response (or for the response timeout)
 * When the controller receives that PUSH request, it creates a new Limnie object and one by one, it reads the fragments from the cache table and stores them into the default pool. When finished without error, it will change the document's repository record to "valid" and will (optionally) clear the cached content. It will then respond to the PUSH request, signaling success. 
 * While the controller is handling the PUSH request, the client is waiting for a response to that request. It will either receive it or there will be a timeout. The timeout period is calculated according to the size of the document, but it's really arbitrary and it will likely lead to problems in a production implementation.
-* **In a PULL scenario,** the client needs access to the content of certain document, whose UUID is known.
-* The client calls the PULL method that initially checks (locally) whether this particular document is already cached. If it is, it immediately returns that information to the calling method and makes no request to the controller: This is a cache hit.
+* **In a PULL scenario,** the client needs access to the content of a certain document, whose UUID is known.
+* The client calls the PULL method (it's actually called CacheDocument...) that initially checks (locally) whether this particular document is already cached. If it is, it immediately returns that information to the calling method and makes no request to the controller: This is a cache hit.
 * If the content is not cached, the controller will have to get involved. A PULL request is sent by the client and when the controller receives it, assigns a worker to pull all the document fragments from the Limnie media to the database cache table.
 * When all fragments are written to the cache table, a response is sent back to the client. The PULL concludes with the data waiting in the cache table. The client is now free to download the content from the database server.
 
@@ -46,7 +46,25 @@ Architecturally speaking, it consists of the following:
 * Each client application requires (at least) one dedicated session to the database server and most probably, no connection pooler can be used (to my knowledge, incompatible with the asynchronous queue, feel free to correct me)
 * No possibility of using a database cluster with multiple servers in live replication (again, problems with the asynchronous queue, again, I'd be delighted you prove me wrong)
 
-### A quick start guide -or else, what to do to see what this thing is about:
+### A quick start guide: what to do to see what this thing is about!
+* Before you start, you need to have access to a postgres server that allows non-ssl connections and a database where you are allowed to create a schema and a couple of tables. You also need to have the right to create new tablespaces.
+* Build the thirdway project and launch one instance for starters. this is going to do the initialization.
+* On the window that comes up, fill in your server host/port/database/username/password and press connect.
+* If all went well, you will see the message "connected to db" on the main log.
+* Now press the button "Setup / Admin functions"
+* It's asking for two paths: One for the tablespace that's going to create (for both thirdway tables) and one for the root folder of the Limnie. If you're on windows, you can leave them as they are. Just remember that the app will not create them --you need to create them yourself first!
+* Press the "Initialize" button and if everything is okay, you will see the log concluding to "init OK". Close this instance after that.
+* Open (at least) two instances of the demo app: one will be the controller and the other will be the client.
+* Fill in the connection credentials in both (just as you did the first time) and press "connect"
+* After connecting, select "Controller" as the launch role in the first and "client" in the other.
+* **To create a new document (a push):** Switch to the client, look at the "Push data" group box, check "Remain Cached" if you want and press the "Push a file" button.
+* Select a file and observe both the client's log: it should conclude with "...ok" as the final outcome of a push.
+* Also, on the client window, observe the file that is now in the repository.
+* Meanwhile, on the controller's window, you can view the cached version of the file that still remains. *Congratulations, that was a PUSH!*
+* **For retrieving a previously pushed object:** first observe that a folder called "thirdway_retrievals" has been created on your desktop. This is where the objects you pull from the Limnie will be stored.
+* In the repository contents list, double click any of the documents you've already pushed. You will notice that its UUID will be automatically filled into the Pull Data section. Check "Open Afterwards" if you like.
+* Now press "Retrieve & Save". If everything went well, the document will be saved to the thirdway_retrievals folder and will open (if there is an application associated with it of course!)
+* Well, that was it! You can also perform more targeted queries on the repository table on the client, and clear the cache on the controller, but that was the end of the demo as it stands.
 
 ### Some final notes
 * So, who could find it worthy of her/his time to look at this project a bit more thoroughly? **I think if you need to build a small-to-medium-scale document management application (desktop or web), then you might get some inspiration (especially if you haven't done it before)**
