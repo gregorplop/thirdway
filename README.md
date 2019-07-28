@@ -22,5 +22,8 @@ Architecturally speaking, it consists of the following:
 
 * Apparenly, these three actors are the client (there can be multiple), the controller (sitting on top of the Limnie) and the PostgreSQL database server.
 * Both the thirdway clients and controller are themselves ordinary clients of the database server. The clients always open one session to the server, while the controller can fire up multiple request-handling threaded workers, each in its own db session.
-* In a PUSH scenario, a new document is created and its binary content needs to be stored (pushed) into the Limnie pool. 
+* In a PUSH scenario, a new document is created and its binary content needs to be stored (pushed) into the Limnie pool.
+* The client is responsible for creating the repository record (initially in an "invalid" state) and upload the binary content as fragments into the cache table. It then has to send a PUSH request to the controller and wait for its response (or for the response timeout)
+* When the controller receives that PUSH request, it creates a new Limnie object and one by one, it reads the fragments from the cache table and stores them into the default pool. When finished without error, it will change the document's repository record to "valid" and will (optionally) clear the cached content. It will then respond to the PUSH request, signalling success. 
+* While the controller is handling the PUSH request, the client is waiting for a response to that request. When it receives it and it's a success, it can rest assured that 
 
