@@ -2,7 +2,7 @@
 \
 _thirdway_ is an exploration on the viability of a content delivery architecture in a document management system.\
 The problem it is trying to address, is binary content storage & delivery via an RDBMS. It gets its name from the debate around the following question: 
->**"How should I store my binary content? As blobs directly into the database, or as files in the filesystem, while keeping their paths referenced in a database field?"**
+>**"How should I store my binary content? As blobs directly into the database, or as files in the filesystem, keeping their paths referenced in the database ?"**
 
 We won't go into the pros and cons of each approach (there's plenty of material around it in forums), but if we arbitrarily call the blob approach "the first way" and the filesystem approach "the second way", then what we'd be suggesting here could be "a third way".
 
