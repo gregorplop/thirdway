@@ -52,7 +52,7 @@ Architecturally speaking, it consists of the following:
 * On the window that comes up, fill in your server host/port/database/username/password and press connect.
 * If all went well, you will see the message "connected to db" on the main log.
 * Now press the button "Setup / Admin functions"
-* It's asking for two paths: One for the tablespace that's going to create (for both thirdway tables) and one for the root folder of the Limnie. If you're on windows, you can leave them as they are. Just remember that the app will not create them --you need to create them yourself first!
+* It's asking for two paths: One for the tablespace that's going to create (for both thirdway tables) and one for the root folder of the Limnie. If you're on windows, you can leave them as they are. Just remember that the app will not create these folders if they do not exist; you need to create them yourself first!
 * Press the "Initialize" button and if everything is okay, you will see the log concluding to "init OK". Close this instance after that.
 * Open (at least) two instances of the demo app: one will be the controller and the other will be the client.
 * Fill in the connection credentials in both (just as you did the first time) and press "connect"
