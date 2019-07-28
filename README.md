@@ -20,10 +20,16 @@ Architecturally speaking, it consists of the following:
 
 ### What sort of communication takes place between the three main actors of a thirdway setup ?
 
-* Apparenly, these three actors are the client (there can be multiple), the controller (sitting on top of the Limnie) and the PostgreSQL database server.
+* Apparenly, these three actors are the client (there can be multiple), the controller (acting as a gateway to the Limnie) and the PostgreSQL database server.
 * Both the thirdway clients and controller are themselves ordinary clients of the database server. The clients always open one session to the server, while the controller can fire up multiple request-handling threaded workers, each in its own db session.
-* In a PUSH scenario, a new document is created and its binary content needs to be stored (pushed) into the Limnie pool.
+* **In a PUSH scenario,** a new document is created and its binary content needs to be stored (pushed) into the Limnie pool.
 * The client is responsible for creating the repository record (initially in an "invalid" state) and upload the binary content as fragments into the cache table. It then has to send a PUSH request to the controller and wait for its response (or for the response timeout)
 * When the controller receives that PUSH request, it creates a new Limnie object and one by one, it reads the fragments from the cache table and stores them into the default pool. When finished without error, it will change the document's repository record to "valid" and will (optionally) clear the cached content. It will then respond to the PUSH request, signalling success. 
 * While the controller is handling the PUSH request, the client is waiting for a response to that request. It will either receive it or there will be a timeout. The timeout period is calculated according to the size of the document, but it's really arbitrary and it will likely lead to problems in a production implementation.
+* **In a PULL scenario,** the client needs access to the content of certain document, whose UUID is known.
+* The client calls the PULL method that initially checks (locally) whether this particular document is already cached. If it is, it immediatelly returns that information to the calling method and makes no request to the controller: This is a cache hit.
+* If the content is not cached, the controller will have to get involved. A PULL request is sent by the client and when the controller receives it, assigns a worker to pull all the document fragments from the Limnie media to the database cache table.
+* When all fragments are written to the cache table, a response is sent back to the client. The PULL process ends with the data waiting in the cache table. The client is now free to download the content from the database server.
+
+### Design characteristics of a thirdway-inspired implementation (the PROS)
 
