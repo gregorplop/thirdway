@@ -17,6 +17,7 @@ Architecturally speaking, it consists of the following:
 * The database's content cache table is there to temporarily hold binary content a client has requested from the controller. Every record contains (as a blob), one fragment of a document's content (plus some addressing and status fields).
 * Clients and the controller communicate by sending asynchronous requests via the PostgreSQL's message queue. This IPC mechanism is based on a modified [pgReQ](https://github.com/gregorplop/pgReQ) session.
 * There are two types of requests going around: a PUSH request for importing new data into the system and a PULL request for making previously stored data available for retrieval. Both requests are sent from a client to the controller.
+* Both these requests expect a response to conclude, otherwise they time out at some point.
 
 ### What sort of communication takes place between the three main actors of a thirdway setup ?
 
