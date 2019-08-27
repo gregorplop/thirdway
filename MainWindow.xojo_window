@@ -46,7 +46,7 @@ Begin Window MainWindow
       TabPanelIndex   =   0
       Top             =   0
       Transparent     =   False
-      Value           =   3
+      Value           =   0
       Visible         =   True
       Width           =   435
       Begin PushButton ClientModeBtn
@@ -75,7 +75,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   16.0
          TextUnit        =   0
-         Top             =   299
+         Top             =   372
          Transparent     =   False
          Underline       =   False
          Visible         =   True
@@ -107,7 +107,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   16.0
          TextUnit        =   0
-         Top             =   387
+         Top             =   460
          Transparent     =   False
          Underline       =   False
          Visible         =   True
@@ -623,7 +623,7 @@ Begin Window MainWindow
          TextFont        =   "System"
          TextSize        =   20.0
          TextUnit        =   0
-         Top             =   258
+         Top             =   331
          Transparent     =   True
          Underline       =   False
          Visible         =   True
@@ -1461,6 +1461,41 @@ Begin Window MainWindow
          Underline       =   False
          Visible         =   True
          Width           =   395
+      End
+      Begin Label Label9
+         AutoDeactivate  =   True
+         Bold            =   False
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   80
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "MainPanel"
+         Italic          =   False
+         Left            =   20
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Multiline       =   True
+         Scope           =   0
+         Selectable      =   False
+         TabIndex        =   12
+         TabPanelIndex   =   1
+         TabStop         =   True
+         Text            =   "Credentials can be filled in automatically by $home$/pgservice.txt"
+         TextAlign       =   0
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   16.0
+         TextUnit        =   0
+         Top             =   230
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   243
       End
    End
    Begin Listbox log
